@@ -9,11 +9,12 @@ export const authMiddleware = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   const authorizationHeader = req.headers.authorization;
 
   if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: '認証されていません' });
+    res.status(401).json({ message: '認証されていません' });
+    return;
   }
 
   const idToken = authorizationHeader.split('Bearer ')[1];
@@ -23,6 +24,6 @@ export const authMiddleware = async (
     req.user = decodedToken;
     next();
   } catch (error) {
-    return res.status(401).json({ message: '認証に失敗しました', error: error });
+    next(error);
   }
 };
