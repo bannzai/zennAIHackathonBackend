@@ -19,6 +19,7 @@
   "description": "",
   "dependencies": {
     "@genkit-ai/ai": "^0.9.12",
+    "@genkit-ai/flow": "^0.5.17",
     "@genkit-ai/googleai": "^0.9.12",
     "@genkit-ai/vertexai": "^0.9.12",
     "@types/express": "^5.0.0",
