@@ -30,7 +30,6 @@ export const askForIngredientsFlow = genkitAI.defineFlow(
   },
   async (question: string) => {
     const model = googleSearchModel();
-
     const result = await model.generateContent(question);
     const output = result.response?.text();
 
