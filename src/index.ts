@@ -3,7 +3,7 @@ import express from "express";
 const app = express();
 
 import { z } from "genkit";
-import { genkitAI, googleGenerativeAI } from "./utils/ai/ai";
+import { genkitAI, googleGenerativeAI, googleSearchModel } from "./utils/ai/ai";
 import { Tool } from "@google/generative-ai";
 
 app.get("/", async (req, res) => {
@@ -25,33 +25,11 @@ const FoodSchema = z.object({
 export const askForIngredientsFlow = genkitAI.defineFlow(
   {
     name: "askForIngredientsFlow",
-    // フローにも型付けのInput/Outputを指定できる
     inputSchema: z.string(),
     outputSchema: z.string(),
   },
   async (question: string) => {
-    // Unable to submit request because Please use google_search field instead of google_search_retrieval field.. Learn more: https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/gemini
-    // gemini-2.0-flash-exp では google_search_retrieval が使えない googleSearch を無理やり渡せば使える
-    // なお、今の所コスト面以外では gemini-1.5-flashにして googleSearchRetrival を使っても問題はない
-    // https://stackoverflow.com/questions/79289711/grounding-with-google-search-with-gemini-2-0-flash-exp
-    const tool = {
-      googleSearch: {},
-    } as Tool;
-    const model = googleGenerativeAI.getGenerativeModel({
-      model: "gemini-2.0-flash-exp",
-      tools: [
-        tool,
-        // {
-        //   googleSearchRetrieval: {
-        //     dynamicRetrievalConfig: {
-        //       // mode: DynamicRetrievalMode.MODE_DYNAMIC,
-        //       // dynamicThreshold: 0.5,
-        //     },
-        //   },
-        // },
-      ],
-    });
-    // フロー内でLLMの実行やその他ワークフロー処理を行う
+    const model = googleSearchModel();
 
     const result = await model.generateContent(question);
     const output = result.response?.text();
