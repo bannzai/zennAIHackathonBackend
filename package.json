@@ -30,5 +30,8 @@
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.7.3",
     "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
   }
 }
