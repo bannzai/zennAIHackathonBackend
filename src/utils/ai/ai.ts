@@ -5,8 +5,10 @@ import {
   GoogleGenerativeAI,
 } from "@google/generative-ai";
 
-export const ai = genkit({
+export const genkitAI = genkit({
   plugins: [vertexAI({ location: "us-central1" })],
 });
 
-export const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY!);
+export const googleGenerativeAI = new GoogleGenerativeAI(
+  process.env.GOOGLE_GENAI_API_KEY!
+);

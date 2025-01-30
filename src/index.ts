@@ -3,7 +3,7 @@ import express from "express";
 const app = express();
 
 import { z } from "genkit";
-import { ai, genAI } from "./utils/ai/ai";
+import { genkitAI, googleGenerativeAI } from "./utils/ai/ai";
 import { Tool } from "@google/generative-ai";
 
 app.get("/", async (req, res) => {
@@ -22,7 +22,7 @@ const FoodSchema = z.object({
   description: z.string(),
 });
 
-export const askForIngredientsFlow = ai.defineFlow(
+export const askForIngredientsFlow = genkitAI.defineFlow(
   {
     name: "askForIngredientsFlow",
     // フローにも型付けのInput/Outputを指定できる
@@ -37,7 +37,7 @@ export const askForIngredientsFlow = ai.defineFlow(
     const tool = {
       googleSearch: {},
     } as Tool;
-    const model = genAI.getGenerativeModel({
+    const model = googleGenerativeAI.getGenerativeModel({
       model: "gemini-2.0-flash-exp",
       tools: [
         tool,
