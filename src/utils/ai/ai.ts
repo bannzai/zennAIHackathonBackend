@@ -1,9 +1,6 @@
 import { genkit, z } from "genkit";
-import { gemini15Flash, vertexAI } from "@genkit-ai/vertexai";
-import {
-  DynamicRetrievalMode,
-  GoogleGenerativeAI,
-} from "@google/generative-ai";
+import { vertexAI } from "@genkit-ai/vertexai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const genkitAI = genkit({
   plugins: [vertexAI({ location: "us-central1" })],
