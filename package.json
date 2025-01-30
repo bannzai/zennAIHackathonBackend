@@ -26,7 +26,6 @@
     "@google/generative-ai": "^0.21.0",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.7",
-    "ai": "^4.1.13",
     "express": "^4.21.2",
     "firebase-admin": "^13.0.2",
     "genkit": "^0.9.12",
