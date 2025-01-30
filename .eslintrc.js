@@ -14,7 +14,7 @@ module.exports = {
     ecmaVersion: "latest",
   },
   plugins: ["@typescript-eslint"],
-  ignorePatterns: ["*.test.ts", "*.test.js", "lib", "yomiage-backend-node16"],
+  ignorePatterns: ["*.test.ts", "*.test.js", "lib"],
   rules: {
     "@typescript-eslint/no-explicit-any": "off",
   },
