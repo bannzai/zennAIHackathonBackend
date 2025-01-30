@@ -1,13 +1,45 @@
 import { genkit, z } from "genkit";
-import { genkitAI } from "../../utils/ai/ai";
+import { genkitAI, googleGenerativeAI } from "../../utils/ai/ai";
+import { SchemaType } from "@google/generative-ai";
 
-export const askForIngredientsFlow = genkitAI.defineFlow(
+const TODOCreateSchemaInput = z.object({
+  question: z.string(),
+});
+
+const TODOCreateSchemaOutput = z.object({
+  id: z.string(),
+  content: z.string(),
+});
+
+export type TODOCreateOutput = (typeof TODOCreateSchemaOutput)["_output"] & {};
+
+export const todoCreateFlow = genkitAI.defineFlow(
   {
     name: "askForIngredientsFlow",
-    inputSchema: z.string(),
-    outputSchema: z.string(),
+    inputSchema: TODOCreateSchemaInput,
+    outputSchema: TODOCreateSchemaOutput,
   },
-  async (question: string) => {
-    return question;
+  async (input: TODOCreateSchemaInput) => {
+    const ai = googleGenerativeAI;
+    const model = ai.getGenerativeModel({
+      model: "gemini-2.0-flash-exp",
+      tools: [
+        {
+          functionDeclarations: [
+            {
+              name: "createTodo",
+              description: "Create a todo item",
+              parameters: {
+                type: SchemaType.OBJECT,
+                properties: {
+              },
+            },
+          ],
+        },
+      ],
+    });
+    const result = await model.generateContent(input.question);
+    const output = result.response?.text();
+    return { id: "1", content: output };
   }
 );
