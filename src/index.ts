@@ -2,19 +2,9 @@ import express from "express";
 
 const app = express();
 
-import { genkit, z } from "genkit";
-import { gemini15Flash, vertexAI } from "@genkit-ai/vertexai";
-import {
-  DynamicRetrievalMode,
-  GoogleGenerativeAI,
-  ModelParams,
-  Tool,
-} from "@google/generative-ai";
-
-const ai = genkit({
-  plugins: [vertexAI({ location: "us-central1" })],
-});
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY!);
+import { z } from "genkit";
+import { ai, genAI } from "./utils/ai/ai";
+import { Tool } from "@google/generative-ai";
 
 app.get("/", async (req, res) => {
   const result = await askForIngredientsFlow("肉じゃが");
