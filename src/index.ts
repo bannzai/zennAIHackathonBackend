@@ -7,6 +7,8 @@ import { gemini15Flash, vertexAI } from "@genkit-ai/vertexai";
 import {
   DynamicRetrievalMode,
   GoogleGenerativeAI,
+  ModelParams,
+  Tool,
 } from "@google/generative-ai";
 
 const ai = genkit({
@@ -38,17 +40,25 @@ export const askForIngredientsFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async (question: string) => {
+    // Unable to submit request because Please use google_search field instead of google_search_retrieval field.. Learn more: https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/gemini
+    // gemini-2.0-flash-exp では google_search_retrieval が使えない googleSearch を無理やり渡せば使える
+    // なお、今の所コスト面以外では gemini-1.5-flashにして googleSearchRetrival を使っても問題はない
+    // https://stackoverflow.com/questions/79289711/grounding-with-google-search-with-gemini-2-0-flash-exp
+    const tool = {
+      googleSearch: {},
+    } as Tool;
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.0-flash-exp",
       tools: [
-        {
-          googleSearchRetrieval: {
-            dynamicRetrievalConfig: {
-              // mode: DynamicRetrievalMode.MODE_DYNAMIC,
-              // dynamicThreshold: 0.5,
-            },
-          },
-        },
+        tool,
+        // {
+        //   googleSearchRetrieval: {
+        //     dynamicRetrievalConfig: {
+        //       // mode: DynamicRetrievalMode.MODE_DYNAMIC,
+        //       // dynamicThreshold: 0.5,
+        //     },
+        //   },
+        // },
       ],
     });
     // フロー内でLLMの実行やその他ワークフロー処理を行う
