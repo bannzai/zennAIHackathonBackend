@@ -11,7 +11,7 @@
     "build": "npm-run-all clean tsc",
     "build:watch": "tsc --watch src/index.ts",
     "genkit": "genkit start -- tsx --watch src/index.ts",
-    "deploy": "gcloud run deploy --source ."
+    "deploy": "gcloud run deploy zennaihackathonbackend --source ."
   },
   "keywords": [],
   "author": "",
