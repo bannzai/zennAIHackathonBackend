@@ -9,7 +9,8 @@
     "clean": "rimraf dist",
     "tsc": "tsc",
     "build": "npm-run-all clean tsc",
-    "build:watch": "tsc --watch",
+    "build:watch": "tsc --watch src/index.ts",
+    "genkit": "genkit start -- tsx --watch src/index.ts",
     "deploy": "gcloud run deploy --source ."
   },
   "keywords": [],
