@@ -4,7 +4,6 @@ const app = express();
 
 import { genkit, z } from "genkit";
 import { gemini15Flash, vertexAI } from "@genkit-ai/vertexai";
-import { runFlow } from "@genkit-ai/flow";
 
 const ai = genkit({
   plugins: [vertexAI({ location: "us-central1" })],
