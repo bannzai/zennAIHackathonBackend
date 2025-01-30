@@ -9,6 +9,7 @@
     "clean": "rimraf dist",
     "tsc": "tsc",
     "build": "npm-run-all clean tsc",
+    "build:watch": "tsc --watch",
     "deploy": "gcloud run deploy --source ."
   },
   "keywords": [],
