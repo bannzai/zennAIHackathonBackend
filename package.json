@@ -18,7 +18,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@ai-sdk/google-vertex": "^2.1.6",
     "@genkit-ai/ai": "^0.9.12",
     "@genkit-ai/flow": "^0.5.17",
     "@genkit-ai/googleai": "^0.9.12",
