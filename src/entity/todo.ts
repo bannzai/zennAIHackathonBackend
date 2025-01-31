@@ -11,4 +11,11 @@ export const TODOSchema = z.object({
   groundings: z.array(GroundingDataSchema),
 });
 
+export const TODOBodySchema = TODOSchema.pick({
+  content: true,
+  supplement: true,
+  detail: true,
+  groundings: true,
+});
+
 export type TODO = z.infer<typeof TODOSchema>;

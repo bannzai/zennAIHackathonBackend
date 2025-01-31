@@ -1,51 +1,58 @@
 import { z } from "genkit";
 import { genkitAI, googleSearchModel } from "../../utils/ai/ai";
 import zodToJsonSchema from "zod-to-json-schema";
-import { GroundingDataSchema } from "../../entity/grouping_url";
+import { GroundingData, GroundingDataSchema } from "../../entity/grouping_url";
+import { TaskSchema } from "../../entity/task";
+import { UserRequestSchema } from "../../entity/userRequest";
+import { TODO, TODOBodySchema, TODOSchema } from "../../entity/todo";
+import { v4 as uuidv4 } from "uuid";
 
 const TODOCreateSchemaInput = z.object({
   question: z.string(),
 });
 
-const _TODOCreateSchemaOutput = z.array(
-  z.object({
-    content: z.string(),
-    supplement: z.string().optional(),
-  })
-);
+const formatToJSONFromMarkdownAnswerSchema = TODOSchema.pick({
+  content: true,
+  supplement: true,
+});
 
-export const groudingURLs = genkitAI.defineTool(
+const fetchGroundingSchema = TODOSchema.pick({
+  detail: true,
+  groundings: true,
+});
+
+export const fetchGrounding = genkitAI.defineTool(
   {
-    name: "groudingURLs",
-    description: "groudingURLs",
-    inputSchema: z.object({
-      todoContent: z.string(),
-      todoSupplement: z.string().optional(),
-    }),
-    outputSchema: z.object({
-      detail: z.string(),
-      groundingUrls: z.array(GroundingDataSchema),
-    }),
+    name: "fetchGrounding",
+    description: "fetchGrounding",
+    inputSchema: formatToJSONFromMarkdownAnswerSchema,
+    outputSchema: fetchGroundingSchema,
   },
   async (input) => {
     const model = googleSearchModel();
     const result = await model.generateContent(
-      `${input.todoContent}, ${input.todoSupplement} に関する情報を要約してください`
+      `${input.content}, ${input.supplement} に関する情報を要約してください`
     );
     const response = result.response;
     const candidates = response?.candidates;
-    const firstCandidate = candidates?.[0];
-    const groudingMetadata = firstCandidate?.groundingMetadata;
-    const index = firstCandidate?.index;
-    const anyGroudingMetadata = groudingMetadata as any;
-    // typo: https://github.com/google-gemini/generative-ai-js/issues/323
-    const groundingChunks = anyGroudingMetadata["groundingChunks"];
-    const web = groundingChunks?.[0].web;
-    const title = web?.title;
-    const url = web?.uri;
+    const groundings: GroundingData[] = [];
+    if (candidates) {
+      for (const candidate of candidates) {
+        const groudingMetadata = candidate?.groundingMetadata;
+        const index = candidate?.index;
+        const anyGroudingMetadata = groudingMetadata as any;
+        // typo: https://github.com/google-gemini/generative-ai-js/issues/323
+        const groundingChunks = anyGroudingMetadata["groundingChunks"];
+        const web = groundingChunks?.[0].web;
+        const title = web?.title;
+        const url = web?.uri;
+        groundings.push({ title, url, index });
+      }
+    }
+
     return {
       detail: result.response?.text() ?? "",
-      groundingUrls: [{ title, url, index }],
+      groundings: groundings,
     };
   }
 );
@@ -55,12 +62,12 @@ export const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
     name: "formatToJSONFromMarkdownAnswer",
     description: "format to json from markdown answer",
     inputSchema: z.string().describe("answer of question. markdown format"),
-    outputSchema: _TODOCreateSchemaOutput,
+    outputSchema: z.array(formatToJSONFromMarkdownAnswerSchema),
   },
   async (input) => {
     const response = await genkitAI.generate({
       prompt: `${input} の中からTODOリストを抽出してください`,
-      output: { schema: _TODOCreateSchemaOutput },
+      output: { schema: z.array(formatToJSONFromMarkdownAnswerSchema) },
     });
     const output = response.output;
     if (!output) {
@@ -112,29 +119,65 @@ export const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
 export const taskCreateFlow = genkitAI.defineFlow(
   {
     name: "taskCreateFlow",
-    inputSchema: TODOCreateSchemaInput,
-    outputSchema: _TODOCreateSchemaOutput,
+    inputSchema: TODOCreateSchemaInput.extend({
+      userRequest: UserRequestSchema,
+    }),
+    outputSchema: TaskSchema,
   },
   async (input) => {
+    const {
+      question,
+      userRequest: { userID },
+    } = input;
+    const taskID = uuidv4();
+
     // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
     const model = googleSearchModel();
     const result = await model.generateContent(
       `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
     );
+    const summary = result.response?.text();
+    const formatToJSONFromMarkdownAnswerResult =
+      await formatToJSONFromMarkdownAnswer(summary);
+    const todos: z.infer<typeof TODOSchema>[] = [];
+    for (const todo of formatToJSONFromMarkdownAnswerResult) {
+      const todoID = uuidv4();
+      const gradingResult = await fetchGrounding(todo);
+      todos.push({
+        id: todoID,
+        userID: userID,
+        taskID: taskID,
+        content: todo.content,
+        supplement: todo.supplement,
+        detail: gradingResult.detail,
+        groundings: gradingResult.groundings,
+      });
+    }
+
     const response = result.response;
     const candidates = response?.candidates;
-    const firstCandidate = candidates?.[0];
-    const groudingMetadata = firstCandidate?.groundingMetadata;
-    const anyGroudingMetadata = groudingMetadata as any;
-    // typo: https://github.com/google-gemini/generative-ai-js/issues/323
-    const groundingChunks = anyGroudingMetadata["groundingChunks"];
-    const web = groundingChunks?.[0].web;
-    const title = web?.title;
-    const url = web?.uri;
+    const groundings: GroundingData[] = [];
+    if (candidates) {
+      const firstCandidate = candidates?.[0];
+      const groudingMetadata = firstCandidate?.groundingMetadata;
+      const anyGroudingMetadata = groudingMetadata as any;
+      // typo: https://github.com/google-gemini/generative-ai-js/issues/323
+      const groundingChunks = anyGroudingMetadata["groundingChunks"];
+      const index = firstCandidate?.index;
+      const web = groundingChunks?.[0].web;
+      const title = web?.title;
+      const url = web?.uri;
+      groundings.push({ title, url, index });
+    }
 
     return {
-      detail: result.response?.text() ?? "",
-      groundingUrls: [{ title, url, index: 0 }],
+      id: taskID,
+      userID: userID,
+      question: question,
+      summary: summary,
+      todos: todos,
+      groundings: groundings,
+      completed: false,
     };
   }
 );

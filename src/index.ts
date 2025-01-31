@@ -5,10 +5,10 @@ const app = express();
 import { z } from "genkit";
 import { genkitAI, googleGenerativeAI, googleSearchModel } from "./utils/ai/ai";
 import { Tool } from "@google/generative-ai";
-import { taskCreateFlow } from "./flows/taskCreate/flow";
+// import { taskCreateFlow } from "./flows/taskCreate/flow";
 
 app.get("/", async (req, res) => {
-  const result = await taskCreateFlow({ question: "結婚に必要なこと" });
+  const result = await askForIngredientsFlow("結婚に必要なこと");
   res.send(result);
 });
 
@@ -42,6 +42,7 @@ export const askForIngredientsFlow = genkitAI.defineFlow(
     const anyGroudingMetadata = groudingMetadata as any;
     // typo: https://github.com/google-gemini/generative-ai-js/issues/323
     const groundingChunks = anyGroudingMetadata["groundingChunks"];
+    const groudingSupport = groudingMetadata?.groundingSupport;
     const web = groundingChunks?.[0].web;
     const title = web?.title;
     const url = web?.uri;
@@ -57,6 +58,7 @@ export const askForIngredientsFlow = genkitAI.defineFlow(
     //     groundingChunksIsArray: Array.isArray(groundingChunks),
     //   })
     // );
+    console.log(JSON.stringify({ groudingSupport: groudingSupport }, null, 2));
     console.log(JSON.stringify({ groundingChunks: groundingChunks }));
     console.log(JSON.stringify({ web: web }, null, 2));
     console.log(JSON.stringify({ title: title }, null, 2));
