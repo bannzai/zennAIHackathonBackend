@@ -118,8 +118,6 @@ export const todoCreateFlow = genkitAI.defineFlow(
   async (input) => {
     // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
     const model = googleSearchModel();
-    const schema = zodToJsonSchema(TODOCreateSchemaOutput);
-    console.log(JSON.stringify({ schema: schema }, null, 2));
     const result = await model.generateContent(
       `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
     );
