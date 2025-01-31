@@ -10,6 +10,7 @@ import {
 
 export const genkitAI = genkit({
   model: gemini15Pro.withConfig({ googleSearchRetrieval: {} }),
+  // NOT WORKING: genkitはgoogleSearchが使えない
   // model: gemini20FlashExp.withConfig({ googleSearch: {} } as any),
   plugins: [vertexAI()],
 });
