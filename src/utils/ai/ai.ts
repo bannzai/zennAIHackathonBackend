@@ -1,5 +1,6 @@
 import { genkit, z } from "genkit";
-import { gemini20FlashExp, vertexAI } from "@genkit-ai/vertexai";
+import { vertexAI } from "@genkit-ai/vertexai";
+import { gemini20FlashExp } from "@genkit-ai/vertexai";
 import {
   GenerativeModel,
   GoogleGenerativeAI,
@@ -7,8 +8,8 @@ import {
 } from "@google/generative-ai";
 
 export const genkitAI = genkit({
+  model: gemini20FlashExp.withConfig({ googleSearch: {} } as any),
   plugins: [vertexAI({ location: "us-central1" })],
-  model: gemini20FlashExp,
 });
 
 export const googleGenerativeAI = new GoogleGenerativeAI(
