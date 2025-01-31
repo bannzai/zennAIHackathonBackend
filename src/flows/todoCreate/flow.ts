@@ -8,14 +8,10 @@ import { SchemaType } from "@google/generative-ai";
 import { ToolDefinition } from "genkit/model";
 import zodToJsonSchema from "zod-to-json-schema";
 import { url } from "inspector";
+import { defaultMaxListeners } from "events";
 
 const TODOCreateSchemaInput = z.object({
   question: z.string(),
-});
-
-const TODO = z.object({
-  content: z.string(),
-  supplement: z.string().optional(),
 });
 
 const GroundingUrl = z.object({
@@ -24,7 +20,15 @@ const GroundingUrl = z.object({
   index: z.number(),
 });
 
+const TODO = z.object({
+  content: z.string(),
+  supplement: z.string().optional(),
+  detail: z.string(),
+  groundingUrls: z.array(GroundingUrl),
+});
+
 const TODOCreateSchemaOutput = z.object({
+  content: z.string(),
   todos: z.array(TODO),
   groundingUrls: z.array(GroundingUrl),
 });
@@ -37,6 +41,28 @@ const _TODOCreateSchemaOutput = z.array(
 );
 
 export type TODOCreateOutput = (typeof TODOCreateSchemaOutput)["_output"] & {};
+
+export const groudingURLs = genkitAI.defineTool(
+  {
+    name: "groudingURLs",
+    description: "groudingURLs",
+    inputSchema: z.object({
+      todoContent: z.string(),
+      todoSupplement: z.string().optional(),
+    }),
+    outputSchema: z.object({
+      detail: z.string(),
+      groundingUrls: z.array(GroundingUrl),
+    }),
+  },
+  async (input) => {
+    const response = await genkitAI.generate({
+      prompt: `${input.todoContent} についてより詳細に教えてください`,
+      output: { schema: z.string() },
+    });
+    return [];
+  }
+);
 
 export const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
   {
