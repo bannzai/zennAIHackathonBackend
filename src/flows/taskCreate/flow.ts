@@ -109,9 +109,9 @@ export const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
 
 // return json;
 
-export const todoCreateFlow = genkitAI.defineFlow(
+export const taskCreateFlow = genkitAI.defineFlow(
   {
-    name: "todoCreateFlow",
+    name: "taskCreateFlow",
     inputSchema: TODOCreateSchemaInput,
     outputSchema: _TODOCreateSchemaOutput,
   },

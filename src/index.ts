@@ -5,10 +5,10 @@ const app = express();
 import { z } from "genkit";
 import { genkitAI, googleGenerativeAI, googleSearchModel } from "./utils/ai/ai";
 import { Tool } from "@google/generative-ai";
-import { todoCreateFlow } from "./flows/todoCreate/flow";
+import { taskCreateFlow } from "./flows/taskCreate/flow";
 
 app.get("/", async (req, res) => {
-  const result = await todoCreateFlow({ question: "結婚に必要なこと" });
+  const result = await taskCreateFlow({ question: "結婚に必要なこと" });
   res.send(result);
 });
 
@@ -74,7 +74,7 @@ export const askForIngredientsFlow = genkitAI.defineFlow(
   }
 );
 
-export const todoCreate = require("./flows/todoCreate/flow");
+export const taskCreate = require("./flows/taskCreate/flow");
 
 // TODO: フローを起動する
 // genkitAI.startFlowServer({ flows: [askForIngredientsFlow] });
