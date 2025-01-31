@@ -13,7 +13,7 @@ import { TODOSchema } from "./todo";
 
 export const TaskSchema = z.object({
   id: z.string(),
-  userId: z.string(),
+  userID: z.string(),
   question: z.string(),
   summary: z.string(),
   todos: z.array(TODOSchema),
