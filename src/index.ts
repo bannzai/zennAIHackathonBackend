@@ -3,7 +3,12 @@ import express from "express";
 const app = express();
 
 import { z } from "genkit";
-import { genkitAI, googleGenerativeAI, googleSearchModel } from "./utils/ai/ai";
+import {
+  genkitAI,
+  googleGenerativeAI,
+  googleSearchModel,
+  googleSearchTool,
+} from "./utils/ai/ai";
 import { GroundingChunk, Tool } from "@google/generative-ai";
 // import { taskCreateFlow } from "./flows/taskCreate/flow";
 
@@ -31,7 +36,19 @@ export const askForIngredientsFlow = genkitAI.defineFlow(
   },
   async (question: string) => {
     const model = googleSearchModel();
-    const result = await model.generateContent(question);
+    const result = await model.generateContent({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              text: question,
+            },
+          ],
+        },
+      ],
+      tools: [googleSearchTool],
+    });
     const output = result.response?.text();
 
     console.log("grouding---");
@@ -44,10 +61,10 @@ export const askForIngredientsFlow = genkitAI.defineFlow(
     const groundingChunks = anyGroudingMetadata[
       "groundingChunks"
     ] as GroundingChunk[];
-    const groudingSupport = groudingMetadata?.groundingSupport;
     const web = groundingChunks?.[0].web;
     const title = web?.title;
     const url = web?.uri;
+    console.log(JSON.stringify({ firstCandidate: firstCandidate }, null, 2));
     // console.log(JSON.stringify({ response: response }, null, 2));
     // console.log(JSON.stringify({ candidates: candidates }, null, 2));
     // console.log(
@@ -60,7 +77,6 @@ export const askForIngredientsFlow = genkitAI.defineFlow(
     //     groundingChunksIsArray: Array.isArray(groundingChunks),
     //   })
     // );
-    console.log(JSON.stringify({ groudingSupport: groudingSupport }, null, 2));
     console.log(JSON.stringify({ groundingChunks: groundingChunks }));
     console.log(JSON.stringify({ web: web }, null, 2));
     console.log(JSON.stringify({ title: title }, null, 2));
