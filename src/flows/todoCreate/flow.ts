@@ -142,6 +142,7 @@ export const todoCreateFlow = genkitAI.defineFlow(
       }
     }
   ],
+  // NOTE: ここを狙ってcandidates,groundingMetadata,groundingChunksを抽出する
   "custom": {
     "candidates": [
       {
