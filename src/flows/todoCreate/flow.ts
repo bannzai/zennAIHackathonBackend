@@ -17,7 +17,7 @@ const TODOCreateSchemaInput = z.object({
 const GroundingUrl = z.object({
   url: z.string(),
   title: z.string(),
-  index: z.number(),
+  index: z.number().optional(),
 });
 
 const TODO = z.object({
@@ -56,11 +56,27 @@ export const groudingURLs = genkitAI.defineTool(
     }),
   },
   async (input) => {
-    const response = await genkitAI.generate({
-      prompt: `${input.todoContent} についてより詳細に教えてください`,
-      output: { schema: z.string() },
-    });
-    return [];
+    const model = googleSearchModel();
+    const schema = zodToJsonSchema(TODOCreateSchemaOutput);
+    console.log(JSON.stringify({ schema: schema }, null, 2));
+    const result = await model.generateContent(
+      `${input.todoContent}, ${input.todoSupplement} に関する情報を要約してください`
+    );
+    const response = result.response;
+    const candidates = response?.candidates;
+    const firstCandidate = candidates?.[0];
+    const groudingMetadata = firstCandidate?.groundingMetadata;
+    const index = firstCandidate?.index;
+    const anyGroudingMetadata = groudingMetadata as any;
+    // typo: https://github.com/google-gemini/generative-ai-js/issues/323
+    const groundingChunks = anyGroudingMetadata["groundingChunks"];
+    const web = groundingChunks?.[0].web;
+    const title = web?.title;
+    const url = web?.uri;
+    return {
+      detail: result.response?.text() ?? "",
+      groundingUrls: [{ title, url, index }],
+    };
   }
 );
 
@@ -83,6 +99,46 @@ export const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
     return output;
   }
 );
+// NOTE: Grounding x JSON modeは使用できない
+// const options: GenerateOptions = {
+//   prompt: `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください`,
+//   output: { schema: TODOCreateSchemaOutput },
+// };
+// const response = await genkitAI.generate(options);
+// -------------------------------------------
+// NOTE: これでgroudingの情報が取得できるが、unknownの型からanyにして取り出しているので大変
+// const response = await genkitAI.generate({
+//   prompt: `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください`,
+// });
+
+// const responseCustom = response.custom as any;
+// const candidates = responseCustom.candidates;
+// const firstCandidate = candidates?.[0];
+// const content = firstCandidate?.content;
+// const index = firstCandidate?.index;
+// const groundingMetadata = firstCandidate?.groundingMetadata;
+// const groundingChunks = groundingMetadata?.groundingChunks;
+// const web = groundingChunks?.[0].web;
+// const title = web?.title;
+// const url = web?.uri;
+// console.log(JSON.stringify({ index: index }, null, 2));
+// console.log(JSON.stringify({ content: content }, null, 2));
+// console.log(JSON.stringify({ firstCandidate: firstCandidate }, null, 2));
+// console.log(
+//   JSON.stringify({ groundingMetadata: groundingMetadata }, null, 2)
+// );
+// console.log(JSON.stringify({ title: title, url: url }, null, 2));
+
+// const text = response.text;
+// console.log(JSON.stringify({ text: text }, null, 2));
+
+// const json = await formatToJSONFromMarkdownAnswer(text);
+// console.log(
+//   JSON.stringify({ formatToJSONFromMarkdownAnswer: json }, null, 2)
+// );
+
+// return json;
+
 export const todoCreateFlow = genkitAI.defineFlow(
   {
     name: "todoCreateFlow",
@@ -90,53 +146,28 @@ export const todoCreateFlow = genkitAI.defineFlow(
     outputSchema: _TODOCreateSchemaOutput,
   },
   async (input) => {
-    // NOTE: Grounding x JSON modeは使用できない
-    // const options: GenerateOptions = {
-    //   prompt: `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください`,
-    //   output: { schema: TODOCreateSchemaOutput },
-    // };
-    // const response = await genkitAI.generate(options);
-
-    const response = await genkitAI.generate({
-      prompt: `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください`,
-    });
-
-    const responseCustom = response.custom as any;
-    const candidates = responseCustom.candidates;
+    // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
+    const model = googleSearchModel();
+    const schema = zodToJsonSchema(TODOCreateSchemaOutput);
+    console.log(JSON.stringify({ schema: schema }, null, 2));
+    const result = await model.generateContent(
+      `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
+    );
+    const response = result.response;
+    const candidates = response?.candidates;
     const firstCandidate = candidates?.[0];
-    const content = firstCandidate?.content;
-    const index = firstCandidate?.index;
-    const groundingMetadata = firstCandidate?.groundingMetadata;
-    const groundingChunks = groundingMetadata?.groundingChunks;
+    const groudingMetadata = firstCandidate?.groundingMetadata;
+    const anyGroudingMetadata = groudingMetadata as any;
+    // typo: https://github.com/google-gemini/generative-ai-js/issues/323
+    const groundingChunks = anyGroudingMetadata["groundingChunks"];
     const web = groundingChunks?.[0].web;
     const title = web?.title;
     const url = web?.uri;
-    console.log(JSON.stringify({ index: index }, null, 2));
-    console.log(JSON.stringify({ content: content }, null, 2));
-    console.log(JSON.stringify({ firstCandidate: firstCandidate }, null, 2));
-    console.log(
-      JSON.stringify({ groundingMetadata: groundingMetadata }, null, 2)
-    );
-    console.log(JSON.stringify({ title: title, url: url }, null, 2));
 
-    const text = response.text;
-    console.log(JSON.stringify({ text: text }, null, 2));
-
-    const json = await formatToJSONFromMarkdownAnswer(text);
-    console.log(
-      JSON.stringify({ formatToJSONFromMarkdownAnswer: json }, null, 2)
-    );
-
-    return json;
-
-    // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
-    // const model = googleSearchModel();
-    // const schema = zodToJsonSchema(TODOCreateSchemaOutput);
-    // console.log(JSON.stringify({ schema: schema }, null, 2));
-    // const result = await model.generateContent(
-    //   `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください。","区切りの文字列の配列形式で出力してください`
-    // );
-    // return result.response?.text() ?? "";
+    return {
+      detail: result.response?.text() ?? "",
+      groundingUrls: [{ title, url, index: 0 }],
+    };
   }
 );
 
