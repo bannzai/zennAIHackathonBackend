@@ -6,6 +6,7 @@ import { TaskSchema } from "../../entity/task";
 import { UserRequestSchema } from "../../entity/userRequest";
 import { TODO, TODOBodySchema, TODOSchema } from "../../entity/todo";
 import { v4 as uuidv4 } from "uuid";
+import { GroundingChunk } from "@google/generative-ai";
 
 const TODOCreateSchemaInput = z.object({
   question: z.string(),
@@ -42,7 +43,9 @@ export const fetchGrounding = genkitAI.defineTool(
         const index = candidate?.index;
         const anyGroudingMetadata = groudingMetadata as any;
         // typo: https://github.com/google-gemini/generative-ai-js/issues/323
-        const groundingChunks = anyGroudingMetadata["groundingChunks"];
+        const groundingChunks = anyGroudingMetadata[
+          "groundingChunks"
+        ] as GroundingChunk[];
         const web = groundingChunks?.[0].web;
         const title = web?.title;
         const url = web?.uri;
@@ -162,7 +165,9 @@ export const taskCreateFlow = genkitAI.defineFlow(
       const groudingMetadata = firstCandidate?.groundingMetadata;
       const anyGroudingMetadata = groudingMetadata as any;
       // typo: https://github.com/google-gemini/generative-ai-js/issues/323
-      const groundingChunks = anyGroudingMetadata["groundingChunks"];
+      const groundingChunks = anyGroudingMetadata[
+        "groundingChunks"
+      ] as GroundingChunk[];
       const index = firstCandidate?.index;
       const web = groundingChunks?.[0].web;
       const title = web?.title;

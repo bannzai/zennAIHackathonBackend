@@ -4,7 +4,7 @@ const app = express();
 
 import { z } from "genkit";
 import { genkitAI, googleGenerativeAI, googleSearchModel } from "./utils/ai/ai";
-import { Tool } from "@google/generative-ai";
+import { GroundingChunk, Tool } from "@google/generative-ai";
 // import { taskCreateFlow } from "./flows/taskCreate/flow";
 
 app.get("/", async (req, res) => {
@@ -41,7 +41,9 @@ export const askForIngredientsFlow = genkitAI.defineFlow(
     const groudingMetadata = firstCandidate?.groundingMetadata;
     const anyGroudingMetadata = groudingMetadata as any;
     // typo: https://github.com/google-gemini/generative-ai-js/issues/323
-    const groundingChunks = anyGroudingMetadata["groundingChunks"];
+    const groundingChunks = anyGroudingMetadata[
+      "groundingChunks"
+    ] as GroundingChunk[];
     const groudingSupport = groudingMetadata?.groundingSupport;
     const web = groundingChunks?.[0].web;
     const title = web?.title;
