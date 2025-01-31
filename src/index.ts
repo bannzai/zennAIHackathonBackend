@@ -37,7 +37,8 @@ export const askForIngredientsFlow = genkitAI.defineFlow(
     console.log("grouding---");
     const response = result.response;
     const candidates = response?.candidates;
-    const groudingMetadata = candidates?.[0]?.groundingMetadata;
+    const firstCandidate = candidates?.[0];
+    const groudingMetadata = firstCandidate?.groundingMetadata;
     const anyGroudingMetadata = groudingMetadata as any;
     // typo: https://github.com/google-gemini/generative-ai-js/issues/323
     const groundingChunks = anyGroudingMetadata["groundingChunks"];

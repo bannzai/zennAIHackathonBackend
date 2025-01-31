@@ -7,12 +7,29 @@ import {
 import { SchemaType } from "@google/generative-ai";
 import { ToolDefinition } from "genkit/model";
 import zodToJsonSchema from "zod-to-json-schema";
+import { url } from "inspector";
 
 const TODOCreateSchemaInput = z.object({
   question: z.string(),
 });
 
-const TODOCreateSchemaOutput = z.array(
+const TODO = z.object({
+  content: z.string(),
+  supplement: z.string().optional(),
+});
+
+const GroundingUrl = z.object({
+  url: z.string(),
+  title: z.string(),
+  index: z.number(),
+});
+
+const TODOCreateSchemaOutput = z.object({
+  todos: z.array(TODO),
+  groundingUrls: z.array(GroundingUrl),
+});
+
+const _TODOCreateSchemaOutput = z.array(
   z.object({
     content: z.string(),
     supplement: z.string().optional(),
@@ -26,12 +43,12 @@ export const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
     name: "formatToJSONFromMarkdownAnswer",
     description: "format to json from markdown answer",
     inputSchema: z.string().describe("answer of question. markdown format"),
-    outputSchema: TODOCreateSchemaOutput,
+    outputSchema: _TODOCreateSchemaOutput,
   },
   async (input) => {
     const response = await genkitAI.generate({
       prompt: `${input} の中からTODOリストを抽出してください`,
-      output: { schema: TODOCreateSchemaOutput },
+      output: { schema: _TODOCreateSchemaOutput },
     });
     const output = response.output;
     if (!output) {
@@ -44,7 +61,7 @@ export const todoCreateFlow = genkitAI.defineFlow(
   {
     name: "todoCreateFlow",
     inputSchema: TODOCreateSchemaInput,
-    outputSchema: TODOCreateSchemaOutput,
+    outputSchema: _TODOCreateSchemaOutput,
   },
   async (input) => {
     // NOTE: Grounding x JSON modeは使用できない
@@ -61,11 +78,15 @@ export const todoCreateFlow = genkitAI.defineFlow(
     const responseCustom = response.custom as any;
     const candidates = responseCustom.candidates;
     const firstCandidate = candidates?.[0];
+    const content = firstCandidate?.content;
+    const index = firstCandidate?.index;
     const groundingMetadata = firstCandidate?.groundingMetadata;
     const groundingChunks = groundingMetadata?.groundingChunks;
     const web = groundingChunks?.[0].web;
     const title = web?.title;
     const url = web?.uri;
+    console.log(JSON.stringify({ index: index }, null, 2));
+    console.log(JSON.stringify({ content: content }, null, 2));
     console.log(JSON.stringify({ firstCandidate: firstCandidate }, null, 2));
     console.log(
       JSON.stringify({ groundingMetadata: groundingMetadata }, null, 2)
