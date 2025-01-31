@@ -1,11 +1,23 @@
 import { z } from "zod";
+import { GroundingDataSchema } from "./grouping_url";
+import { TODOSchema } from "./todo";
+
+// export const TaskSchema = z.object({
+//   id: z.string(),
+//   userId: z.string(),
+//   title: z.string(),
+//   description: z.string().optional(),
+//   dueDate: z.string().datetime().optional(),
+//   completed: z.boolean().default(false),
+// });
 
 export const TaskSchema = z.object({
   id: z.string(),
   userId: z.string(),
-  title: z.string(),
-  description: z.string().optional(),
-  dueDate: z.string().datetime().optional(),
+  question: z.string(),
+  summary: z.string(),
+  todos: z.array(TODOSchema),
+  groundings: z.array(GroundingDataSchema),
   completed: z.boolean().default(false),
 });
 

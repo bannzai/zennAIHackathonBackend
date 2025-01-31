@@ -1,36 +1,10 @@
-import { GenerateOptions, genkit, z } from "genkit";
-import {
-  genkitAI,
-  googleGenerativeAI,
-  googleSearchModel,
-} from "../../utils/ai/ai";
-import { SchemaType } from "@google/generative-ai";
-import { ToolDefinition } from "genkit/model";
+import { z } from "genkit";
+import { genkitAI, googleSearchModel } from "../../utils/ai/ai";
 import zodToJsonSchema from "zod-to-json-schema";
-import { url } from "inspector";
-import { defaultMaxListeners } from "events";
+import { GroundingDataSchema } from "../../entity/grouping_url";
 
 const TODOCreateSchemaInput = z.object({
   question: z.string(),
-});
-
-const GroundingUrl = z.object({
-  url: z.string(),
-  title: z.string(),
-  index: z.number().optional(),
-});
-
-const TODO = z.object({
-  content: z.string(),
-  supplement: z.string().optional(),
-  detail: z.string(),
-  groundingUrls: z.array(GroundingUrl),
-});
-
-const TODOCreateSchemaOutput = z.object({
-  content: z.string(),
-  todos: z.array(TODO),
-  groundingUrls: z.array(GroundingUrl),
 });
 
 const _TODOCreateSchemaOutput = z.array(
@@ -39,8 +13,6 @@ const _TODOCreateSchemaOutput = z.array(
     supplement: z.string().optional(),
   })
 );
-
-export type TODOCreateOutput = (typeof TODOCreateSchemaOutput)["_output"] & {};
 
 export const groudingURLs = genkitAI.defineTool(
   {
@@ -52,13 +24,11 @@ export const groudingURLs = genkitAI.defineTool(
     }),
     outputSchema: z.object({
       detail: z.string(),
-      groundingUrls: z.array(GroundingUrl),
+      groundingUrls: z.array(GroundingDataSchema),
     }),
   },
   async (input) => {
     const model = googleSearchModel();
-    const schema = zodToJsonSchema(TODOCreateSchemaOutput);
-    console.log(JSON.stringify({ schema: schema }, null, 2));
     const result = await model.generateContent(
       `${input.todoContent}, ${input.todoSupplement} に関する情報を要約してください`
     );
