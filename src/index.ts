@@ -71,3 +71,6 @@ export const askForIngredientsFlow = genkitAI.defineFlow(
     return output;
   }
 );
+
+// TODO: フローを起動する
+// genkitAI.startFlowServer({ flows: [askForIngredientsFlow] });
