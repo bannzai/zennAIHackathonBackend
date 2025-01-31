@@ -27,44 +27,13 @@ export function googleSearchModel(): GenerativeModel {
   const googleSearchTool = {
     googleSearch: {},
   } as Tool;
-  const functionTool: Tool = {
-    functionDeclarations: [
-      {
-        name: "createTodo",
-        description: "Create a todo item",
-        parameters: {
-          type: SchemaType.OBJECT,
-          required: ["todos"],
-          properties: {
-            todos: {
-              type: SchemaType.ARRAY,
-              nullable: false,
-              items: {
-                type: SchemaType.OBJECT,
-                nullable: false,
-                properties: {
-                  content: {
-                    type: SchemaType.STRING,
-                    nullable: false,
-                  },
-                  url: {
-                    type: SchemaType.STRING,
-                    nullable: false,
-                    description: "grounding url",
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    ],
-  };
 
   // const model = googleGenerativeAI.getGenerativeModel({
-  //   model: "gemini-2.0-flash-exp",
+  //   model: "gemini-1.5-flash",
   //   tools: [
-  //     googleSearchTool,
+  //     {
+  //       googleSearchRetrieval: {},
+  //     },
   //     // functionTool,
   //     // {
   //     //   googleSearchRetrieval: {
@@ -76,11 +45,9 @@ export function googleSearchModel(): GenerativeModel {
   //     // },
   //   ],
   const model = googleGenerativeAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+    model: "gemini-2.0-flash-exp",
     tools: [
-      {
-        googleSearchRetrieval: {},
-      },
+      googleSearchTool,
       // functionTool,
       // {
       //   googleSearchRetrieval: {
