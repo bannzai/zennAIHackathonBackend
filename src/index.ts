@@ -5,9 +5,10 @@ const app = express();
 import { z } from "genkit";
 import { genkitAI, googleGenerativeAI, googleSearchModel } from "./utils/ai/ai";
 import { Tool } from "@google/generative-ai";
+import { todoCreateFlow } from "./flows/todoCreate/flow";
 
 app.get("/", async (req, res) => {
-  const result = await askForIngredientsFlow("肉じゃが");
+  const result = await todoCreateFlow({ question: "結婚に必要なこと" });
   res.send(result);
 });
 
