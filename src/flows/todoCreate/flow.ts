@@ -15,28 +15,36 @@ const TODOCreateSchemaInput = z.object({
 const TODOCreateSchemaOutput = z.array(
   z.object({
     content: z.string(),
-    url: z.string(),
+    supplement: z.string().optional(),
   })
 );
 
 export type TODOCreateOutput = (typeof TODOCreateSchemaOutput)["_output"] & {};
 
-export const todoCreateTool = genkitAI.defineTool(
+export const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
   {
-    name: "createTodo",
-    description: "Create a todo item",
-    inputSchema: TODOCreateSchemaInput,
-    outputSchema: z.string(),
+    name: "formatToJSONFromMarkdownAnswer",
+    description: "format to json from markdown answer",
+    inputSchema: z.string().describe("answer of question. markdown format"),
+    outputSchema: TODOCreateSchemaOutput,
   },
   async (input) => {
-    return `${input.question} を達成するために必要なTODOリストを教えてください`;
+    const response = await genkitAI.generate({
+      prompt: `${input} の中からTODOリストを抽出してください`,
+      output: { schema: TODOCreateSchemaOutput },
+    });
+    const output = response.output;
+    if (!output) {
+      throw new Error("output is null");
+    }
+    return output;
   }
 );
 export const todoCreateFlow = genkitAI.defineFlow(
   {
     name: "todoCreateFlow",
     inputSchema: TODOCreateSchemaInput,
-    outputSchema: z.string(),
+    outputSchema: TODOCreateSchemaOutput,
   },
   async (input) => {
     // NOTE: Grounding x JSON modeは使用できない
@@ -67,7 +75,12 @@ export const todoCreateFlow = genkitAI.defineFlow(
     const text = response.text;
     console.log(JSON.stringify({ text: text }, null, 2));
 
-    return text;
+    const json = await formatToJSONFromMarkdownAnswer(text);
+    console.log(
+      JSON.stringify({ formatToJSONFromMarkdownAnswer: json }, null, 2)
+    );
+
+    return json;
 
     // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
     // const model = googleSearchModel();
