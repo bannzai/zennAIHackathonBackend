@@ -49,7 +49,7 @@ export const todoCreateFlow = genkitAI.defineFlow(
     const schema = zodToJsonSchema(TODOCreateSchemaOutput);
     console.log(JSON.stringify({ schema: schema }, null, 2));
     const result = await model.generateContent(
-      `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください。JSON形式で出力してください。スキーマは ${TODOCreateSchemaOutput.toString()} です。`
+      `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください。","区切りの文字列の配列形式で出力してください`
     );
     return result.response?.text() ?? "";
   }
