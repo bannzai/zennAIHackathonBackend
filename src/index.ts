@@ -3,11 +3,7 @@ import express from "express";
 const app = express();
 
 import { z } from "genkit";
-import {
-  genkitAI,
-  googleSearchGroundingData,
-  googleSearchModel,
-} from "./utils/ai/ai";
+import { genkitAI, googleSearchGroundingData } from "./utils/ai/ai";
 
 app.get("/", async (req, res) => {
   const result = await askForIngredientsFlow("結婚に必要なこと");
@@ -32,7 +28,6 @@ export const askForIngredientsFlow = genkitAI.defineFlow(
     outputSchema: z.string(),
   },
   async (question: string) => {
-    const model = googleSearchModel();
     const { aiTextResponse, groundings } = await googleSearchGroundingData(
       question
     );

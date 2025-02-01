@@ -26,11 +26,11 @@ export const googleGenerativeAI = new GoogleGenerativeAI(
 // gemini-2.0-flash-exp では google_search_retrieval が使えない googleSearch を無理やり渡せば使える
 // なお、今の所コスト面以外では gemini-1.5-flashにして googleSearchRetrival を使っても問題はない
 // https://stackoverflow.com/questions/79289711/grounding-with-google-search-with-gemini-2-0-flash-exp
-export const googleSearchTool = {
+const googleSearchTool = {
   googleSearch: {},
 } as Tool;
 
-export function googleSearchModel(): GenerativeModel {
+function googleSearchModel(): GenerativeModel {
   // const model = googleGenerativeAI.getGenerativeModel({
   //   model: "gemini-1.5-flash",
   //   tools: [
