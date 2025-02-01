@@ -2,11 +2,14 @@ import { genkit, z } from "genkit";
 import { vertexAI } from "@genkit-ai/vertexai";
 import { gemini15Pro, gemini20FlashExp } from "@genkit-ai/vertexai";
 import {
+  GenerateContentCandidate,
   GenerativeModel,
   GoogleGenerativeAI,
+  GroundingChunk,
   SchemaType,
   Tool,
 } from "@google/generative-ai";
+import { GroundingData } from "../../entity/grouping_url";
 
 export const genkitAI = genkit({
   model: gemini15Pro.withConfig({ googleSearchRetrieval: {} }),
@@ -61,4 +64,37 @@ export function googleSearchModel(): GenerativeModel {
   });
 
   return model;
+}
+
+export async function googleSearchGroundingData(
+  query: string
+): Promise<{ aiTextResponse: string; groundings: GroundingData[] }> {
+  // NOTE: この方法だと、candidatesが返ってこない時がある。generateContentにもgoogleSearchToolを渡してあげる必要がある
+  // const result = await model.generateContent(
+  //   query
+  // );
+  const model = googleSearchModel();
+  const result = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: query }] }],
+    tools: [googleSearchTool],
+  });
+  const response = result.response;
+  const candidates = response?.candidates;
+  const groundings: GroundingData[] = [];
+  if (candidates) {
+    for (const candidate of candidates) {
+      const groudingMetadata = candidate?.groundingMetadata;
+      const index = candidate?.index;
+      const anyGroudingMetadata = groudingMetadata as any;
+      // typo: https://github.com/google-gemini/generative-ai-js/issues/323
+      const groundingChunks = anyGroudingMetadata[
+        "groundingChunks"
+      ] as GroundingChunk[];
+      const web = groundingChunks?.[0].web;
+      const title = web?.title;
+      const url = web?.uri;
+      groundings.push({ title, url, index });
+    }
+  }
+  return { aiTextResponse: response?.text() ?? "", groundings };
 }

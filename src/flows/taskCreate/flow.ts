@@ -1,5 +1,9 @@
 import { z } from "genkit";
-import { genkitAI, googleSearchModel } from "../../utils/ai/ai";
+import {
+  genkitAI,
+  googleSearchGroundingData,
+  googleSearchModel,
+} from "../../utils/ai/ai";
 import zodToJsonSchema from "zod-to-json-schema";
 import { GroundingData, GroundingDataSchema } from "../../entity/grouping_url";
 import { TaskSchema } from "../../entity/task";
@@ -18,7 +22,7 @@ const formatToJSONFromMarkdownAnswerSchema = TODOSchema.pick({
 });
 
 const fetchGroundingSchema = TODOSchema.pick({
-  detail: true,
+  aiTextResponse: true,
   groundings: true,
 });
 
@@ -30,32 +34,13 @@ export const fetchGrounding = genkitAI.defineTool(
     outputSchema: fetchGroundingSchema,
   },
   async (input) => {
-    const model = googleSearchModel();
-    const result = await model.generateContent(
+    const { aiTextResponse, groundings } = await googleSearchGroundingData(
       `${input.content}, ${input.supplement} に関する情報を要約してください`
     );
-    const response = result.response;
-    const candidates = response?.candidates;
-    const groundings: GroundingData[] = [];
-    if (candidates) {
-      for (const candidate of candidates) {
-        const groudingMetadata = candidate?.groundingMetadata;
-        const index = candidate?.index;
-        const anyGroudingMetadata = groudingMetadata as any;
-        // typo: https://github.com/google-gemini/generative-ai-js/issues/323
-        const groundingChunks = anyGroudingMetadata[
-          "groundingChunks"
-        ] as GroundingChunk[];
-        const web = groundingChunks?.[0].web;
-        const title = web?.title;
-        const url = web?.uri;
-        groundings.push({ title, url, index });
-      }
-    }
 
     return {
-      detail: result.response?.text() ?? "",
-      groundings: groundings,
+      aiTextResponse,
+      groundings,
     };
   }
 );
@@ -136,12 +121,12 @@ export const taskCreateFlow = genkitAI.defineFlow(
 
     // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
     const model = googleSearchModel();
-    const result = await model.generateContent(
+    const { aiTextResponse, groundings } = await googleSearchGroundingData(
       `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
     );
-    const summary = result.response?.text();
+
     const formatToJSONFromMarkdownAnswerResult =
-      await formatToJSONFromMarkdownAnswer(summary);
+      await formatToJSONFromMarkdownAnswer(aiTextResponse);
     const todos: z.infer<typeof TODOSchema>[] = [];
     for (const todo of formatToJSONFromMarkdownAnswerResult) {
       const todoID = uuidv4();
@@ -152,35 +137,17 @@ export const taskCreateFlow = genkitAI.defineFlow(
         taskID: taskID,
         content: todo.content,
         supplement: todo.supplement,
-        detail: gradingResult.detail,
+        aiTextResponse: gradingResult.aiTextResponse,
         groundings: gradingResult.groundings,
       });
-    }
-
-    const response = result.response;
-    const candidates = response?.candidates;
-    const groundings: GroundingData[] = [];
-    if (candidates) {
-      const firstCandidate = candidates?.[0];
-      const groudingMetadata = firstCandidate?.groundingMetadata;
-      const anyGroudingMetadata = groudingMetadata as any;
-      // typo: https://github.com/google-gemini/generative-ai-js/issues/323
-      const groundingChunks = anyGroudingMetadata[
-        "groundingChunks"
-      ] as GroundingChunk[];
-      const index = firstCandidate?.index;
-      const web = groundingChunks?.[0].web;
-      const title = web?.title;
-      const url = web?.uri;
-      groundings.push({ title, url, index });
     }
 
     return {
       id: taskID,
       userID: userID,
       question: question,
-      summary: summary,
       todos: todos,
+      aiTextResponse: aiTextResponse,
       groundings: groundings,
       completed: false,
     };

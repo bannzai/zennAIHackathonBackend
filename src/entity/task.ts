@@ -15,7 +15,7 @@ export const TaskSchema = z.object({
   id: z.string(),
   userID: z.string(),
   question: z.string(),
-  summary: z.string(),
+  aiTextResponse: z.string(),
   todos: z.array(TODOSchema),
   groundings: z.array(GroundingDataSchema),
   completed: z.boolean().default(false),

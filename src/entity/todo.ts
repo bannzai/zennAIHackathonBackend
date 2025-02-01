@@ -7,14 +7,14 @@ export const TODOSchema = z.object({
   taskID: z.string(),
   content: z.string(),
   supplement: z.string().optional(),
-  detail: z.string(),
+  aiTextResponse: z.string(),
   groundings: z.array(GroundingDataSchema),
 });
 
 export const TODOBodySchema = TODOSchema.pick({
   content: true,
   supplement: true,
-  detail: true,
+  aiTextResponse: true,
   groundings: true,
 });
 
