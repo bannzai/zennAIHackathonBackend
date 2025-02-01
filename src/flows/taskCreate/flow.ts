@@ -1,7 +1,7 @@
 import { z } from "genkit";
 import { genkitAI, googleSearchGroundingData } from "../../utils/ai/ai";
 import zodToJsonSchema from "zod-to-json-schema";
-import { GroundingData, GroundingDataSchema } from "../../entity/grouping_url";
+import { GroundingData, GroundingDataSchema } from "../../entity/grounding_url";
 import { TaskSchema } from "../../entity/task";
 import { UserRequestSchema } from "../../entity/userRequest";
 import { TODO, TODOBodySchema, TODOSchema } from "../../entity/todo";
