@@ -93,6 +93,10 @@ export async function googleSearchGroundingData(
       const web = groundingChunks?.[0].web;
       const title = web?.title;
       const url = web?.uri;
+      // console.log(JSON.stringify({ groundingChunks: groundingChunks }));
+      // console.log(JSON.stringify({ web: web }, null, 2));
+      // console.log(JSON.stringify({ title: title }, null, 2));
+      // console.log(JSON.stringify({ url: url }, null, 2));
       groundings.push({ title, url, index });
     }
   }

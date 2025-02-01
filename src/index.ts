@@ -5,12 +5,9 @@ const app = express();
 import { z } from "genkit";
 import {
   genkitAI,
-  googleGenerativeAI,
+  googleSearchGroundingData,
   googleSearchModel,
-  googleSearchTool,
 } from "./utils/ai/ai";
-import { GroundingChunk, Tool } from "@google/generative-ai";
-// import { taskCreateFlow } from "./flows/taskCreate/flow";
 
 app.get("/", async (req, res) => {
   const result = await askForIngredientsFlow("結婚に必要なこと");
@@ -36,61 +33,14 @@ export const askForIngredientsFlow = genkitAI.defineFlow(
   },
   async (question: string) => {
     const model = googleSearchModel();
-    const result = await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: question,
-            },
-          ],
-        },
-      ],
-      tools: [googleSearchTool],
-    });
-    const output = result.response?.text();
+    const { aiTextResponse, groundings } = await googleSearchGroundingData(
+      question
+    );
 
-    console.log("grouding---");
-    const response = result.response;
-    const candidates = response?.candidates;
-    const firstCandidate = candidates?.[0];
-    const groudingMetadata = firstCandidate?.groundingMetadata;
-    const anyGroudingMetadata = groudingMetadata as any;
-    // typo: https://github.com/google-gemini/generative-ai-js/issues/323
-    const groundingChunks = anyGroudingMetadata[
-      "groundingChunks"
-    ] as GroundingChunk[];
-    const web = groundingChunks?.[0].web;
-    const title = web?.title;
-    const url = web?.uri;
-    console.log(JSON.stringify({ firstCandidate: firstCandidate }, null, 2));
-    // console.log(JSON.stringify({ response: response }, null, 2));
-    // console.log(JSON.stringify({ candidates: candidates }, null, 2));
-    // console.log(
-    //   JSON.stringify({ groudingMetadata: groudingMetadata }, null, 2)
-    // );
-    // console.log(
-    //   JSON.stringify({
-    //     groundingChunksIsNull: groundingChunks === null,
-    //     groudingChunksIsUndefined: groundingChunks === undefined,
-    //     groundingChunksIsArray: Array.isArray(groundingChunks),
-    //   })
-    // );
-    console.log(JSON.stringify({ groundingChunks: groundingChunks }));
-    console.log(JSON.stringify({ web: web }, null, 2));
-    console.log(JSON.stringify({ title: title }, null, 2));
-    console.log(JSON.stringify({ url: url }, null, 2));
-
-    // const { output } = await ai.generate({
-    //   model: gemini15Flash,
-    //   prompt: `${food} の材料を日本語で教えて下さい.`,
-    //   output: { schema: FoodSchema },
-    // });
-    if (!output) {
+    if (!aiTextResponse) {
       throw new Error("Failed to generate ingredients");
     }
-    return output;
+    return aiTextResponse;
   }
 );
 
