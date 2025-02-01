@@ -88,7 +88,10 @@ export async function googleSearchGroundingData(
       `googleSearchGroundingData20FlashExp_1Result: ${errorMessage(error)}`
     );
   }
-  if (googleSearchGroundingData20FlashExp_1Result) {
+  if (
+    googleSearchGroundingData20FlashExp_1Result &&
+    groundingIsPerfect(googleSearchGroundingData20FlashExp_1Result)
+  ) {
     return googleSearchGroundingData20FlashExp_1Result;
   }
 
@@ -104,7 +107,10 @@ export async function googleSearchGroundingData(
       `googleSearchGroundingData20FlashExp_2Result: ${errorMessage(error)}`
     );
   }
-  if (googleSearchGroundingData20FlashExp_2Result) {
+  if (
+    googleSearchGroundingData20FlashExp_2Result &&
+    groundingIsPerfect(googleSearchGroundingData20FlashExp_2Result)
+  ) {
     return googleSearchGroundingData20FlashExp_2Result;
   }
 
@@ -119,7 +125,10 @@ export async function googleSearchGroundingData(
       `googleSearchGroundingData15FlashResult_1: ${errorMessage(error)}`
     );
   }
-  if (googleSearchGroundingData15FlashResult_1) {
+  if (
+    googleSearchGroundingData15FlashResult_1 &&
+    groundingIsPerfect(googleSearchGroundingData15FlashResult_1)
+  ) {
     return googleSearchGroundingData15FlashResult_1;
   }
 
@@ -137,8 +146,21 @@ export async function googleSearchGroundingData(
       `googleSearchGroundingData15FlashResult_2: ${errorMessage(error)}`
     );
   }
-  if (googleSearchGroundingData15FlashResult_2) {
+  if (
+    googleSearchGroundingData15FlashResult_2 &&
+    groundingIsPerfect(googleSearchGroundingData15FlashResult_2)
+  ) {
     return googleSearchGroundingData15FlashResult_2;
+  }
+
+  const bestGrounding = bestScoreGrounding(
+    googleSearchGroundingData20FlashExp_1Result,
+    googleSearchGroundingData20FlashExp_2Result,
+    googleSearchGroundingData15FlashResult_1,
+    googleSearchGroundingData15FlashResult_2
+  );
+  if (bestGrounding) {
+    return bestGrounding;
   }
 
   throw new Error(
@@ -173,4 +195,41 @@ function transformGroundingData(result: GenerateContentResult): {
     }
   }
   return { aiTextResponse: response?.text() ?? "", groundings };
+}
+
+function groundingIsPerfect(grounding: Grounding): boolean {
+  let hasInvalidGrounding = false;
+  for (const _grounding of grounding.groundings) {
+    if (!_grounding.title || !_grounding.url) {
+      hasInvalidGrounding = true;
+    }
+  }
+  return !hasInvalidGrounding;
+}
+
+function groundingScore(grounding: Grounding): number {
+  let score = grounding.groundings.length * 2;
+  for (const _grounding of grounding.groundings) {
+    if (!_grounding.title) {
+      score -= 1;
+    }
+    if (!_grounding.url) {
+      score -= 1;
+    }
+  }
+  return score;
+}
+
+function bestScoreGrounding(
+  ...groundings: (Grounding | null)[]
+): Grounding | null {
+  return groundings.reduce((best, current) => {
+    if (!best) {
+      return current;
+    }
+    if (!current) {
+      return best;
+    }
+    return groundingScore(best) > groundingScore(current) ? best : current;
+  });
 }
