@@ -1,9 +1,5 @@
 import { z } from "genkit";
-import {
-  genkitAI,
-  googleSearchGroundingData,
-  googleSearchModel,
-} from "../../utils/ai/ai";
+import { genkitAI, googleSearchGroundingData } from "../../utils/ai/ai";
 import zodToJsonSchema from "zod-to-json-schema";
 import { GroundingData, GroundingDataSchema } from "../../entity/grouping_url";
 import { TaskSchema } from "../../entity/task";
@@ -54,7 +50,7 @@ export const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
   },
   async (input) => {
     const response = await genkitAI.generate({
-      prompt: `${input} の中からTODOリストを抽出してください`,
+      prompt: `${input} の中からTODOリストを抽出して、要素を一つずつ小分けにしてください`,
       output: { schema: z.array(formatToJSONFromMarkdownAnswerSchema) },
     });
     const output = response.output;
@@ -120,7 +116,6 @@ export const taskCreateFlow = genkitAI.defineFlow(
     const taskID = uuidv4();
 
     // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
-    const model = googleSearchModel();
     const { aiTextResponse, groundings } = await googleSearchGroundingData(
       `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
     );

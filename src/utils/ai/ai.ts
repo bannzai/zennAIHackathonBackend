@@ -31,26 +31,22 @@ const googleSearchTool = {
 } as Tool;
 
 function googleSearchModel(): GenerativeModel {
-  // const model = googleGenerativeAI.getGenerativeModel({
-  //   model: "gemini-1.5-flash",
-  //   tools: [
-  //     {
-  //       googleSearchRetrieval: {},
-  //     },
-  //     // functionTool,
-  //     // {
-  //     //   googleSearchRetrieval: {
-  //     //     dynamicRetrievalConfig: {
-  //     //       // mode: DynamicRetrievalMode.MODE_DYNAMIC,
-  //     //       // dynamicThreshold: 0.5,
-  //     //     },
-  //     //   },
-  //     // },
-  //   ],
-  const model = googleGenerativeAI.getGenerativeModel({
+  return googleGenerativeAI.getGenerativeModel({
+    model: "gemini-1.5-flash",
+    tools: [
+      {
+        googleSearchRetrieval: {},
+      },
+    ],
+  });
+}
+
+function googleSearchModelExp(): GenerativeModel {
+  return googleGenerativeAI.getGenerativeModel({
     model: "gemini-2.0-flash-exp",
     tools: [
       googleSearchTool,
+      // NOTE: functionTool を使って整形を直接行えない
       // functionTool,
       // {
       //   googleSearchRetrieval: {
@@ -62,8 +58,6 @@ function googleSearchModel(): GenerativeModel {
       // },
     ],
   });
-
-  return model;
 }
 
 export async function googleSearchGroundingData(
@@ -73,7 +67,7 @@ export async function googleSearchGroundingData(
   // const result = await model.generateContent(
   //   query
   // );
-  const model = googleSearchModel();
+  const model = googleSearchModelExp();
   const result = await model.generateContent({
     contents: [{ role: "user", parts: [{ text: query }] }],
     tools: [googleSearchTool],
