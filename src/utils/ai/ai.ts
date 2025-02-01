@@ -30,7 +30,7 @@ const googleSearchTool = {
   googleSearch: {},
 } as Tool;
 
-function googleSearchModel(): GenerativeModel {
+function googleSearchModel15Flash(): GenerativeModel {
   return googleGenerativeAI.getGenerativeModel({
     model: "gemini-1.5-flash",
     tools: [
@@ -41,7 +41,7 @@ function googleSearchModel(): GenerativeModel {
   });
 }
 
-function googleSearchModelExp(): GenerativeModel {
+function googleSearchModel20FlashExp(): GenerativeModel {
   return googleGenerativeAI.getGenerativeModel({
     model: "gemini-2.0-flash-exp",
     tools: [
@@ -67,7 +67,7 @@ export async function googleSearchGroundingData(
   // const result = await model.generateContent(
   //   query
   // );
-  const model = googleSearchModelExp();
+  const model = googleSearchModel20FlashExp();
   const result = await model.generateContent({
     contents: [{ role: "user", parts: [{ text: query }] }],
     tools: [googleSearchTool],
