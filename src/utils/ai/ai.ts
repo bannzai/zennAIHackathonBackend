@@ -3,13 +3,15 @@ import { vertexAI } from "@genkit-ai/vertexai";
 import { gemini15Pro, gemini20FlashExp } from "@genkit-ai/vertexai";
 import {
   GenerateContentCandidate,
+  GenerateContentResult,
   GenerativeModel,
   GoogleGenerativeAI,
   GroundingChunk,
   SchemaType,
   Tool,
 } from "@google/generative-ai";
-import { GroundingData } from "../../entity/grouping_url";
+import { GroundingData, GroundingDataSchema } from "../../entity/grouping_url";
+import { errorMessage } from "../error/message";
 
 export const genkitAI = genkit({
   model: gemini15Pro.withConfig({ googleSearchRetrieval: {} }),
@@ -30,14 +32,14 @@ const googleSearchTool = {
   googleSearch: {},
 } as Tool;
 
+const googleSearchRetrievalTool: Tool = {
+  googleSearchRetrieval: {},
+};
+
 function googleSearchModel15Flash(): GenerativeModel {
   return googleGenerativeAI.getGenerativeModel({
     model: "gemini-1.5-flash",
-    tools: [
-      {
-        googleSearchRetrieval: {},
-      },
-    ],
+    tools: [googleSearchRetrievalTool],
   });
 }
 
@@ -59,19 +61,95 @@ function googleSearchModel20FlashExp(): GenerativeModel {
     ],
   });
 }
+const GroundingSchema = z.object({
+  aiTextResponse: z.string(),
+  groundings: z.array(GroundingDataSchema),
+});
+type Grounding = z.infer<typeof GroundingSchema>;
 
 export async function googleSearchGroundingData(
   query: string
-): Promise<{ aiTextResponse: string; groundings: GroundingData[] }> {
-  // NOTE: この方法だと、candidatesが返ってこない時がある。generateContentにもgoogleSearchToolを渡してあげる必要がある
-  // const result = await model.generateContent(
-  //   query
-  // );
-  const model = googleSearchModel20FlashExp();
-  const result = await model.generateContent({
-    contents: [{ role: "user", parts: [{ text: query }] }],
-    tools: [googleSearchTool],
-  });
+): Promise<Grounding> {
+  const returnErrors: any[] = [];
+
+  let googleSearchGroundingData20FlashExp_1Result: Grounding | null = null;
+  try {
+    const model = googleSearchModel20FlashExp();
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: query }] }],
+      tools: [googleSearchTool],
+    });
+    googleSearchGroundingData20FlashExp_1Result =
+      transformGroundingData(result);
+  } catch (error) {
+    console.error(error);
+
+    returnErrors.push(
+      `googleSearchGroundingData20FlashExp_1Result: ${errorMessage(error)}`
+    );
+  }
+  if (googleSearchGroundingData20FlashExp_1Result) {
+    return googleSearchGroundingData20FlashExp_1Result;
+  }
+
+  let googleSearchGroundingData20FlashExp_2Result: Grounding | null = null;
+  try {
+    const model = googleSearchModel20FlashExp();
+    const result = await model.generateContent(query);
+    googleSearchGroundingData20FlashExp_2Result =
+      transformGroundingData(result);
+  } catch (error) {
+    console.error(error);
+    returnErrors.push(
+      `googleSearchGroundingData20FlashExp_2Result: ${errorMessage(error)}`
+    );
+  }
+  if (googleSearchGroundingData20FlashExp_2Result) {
+    return googleSearchGroundingData20FlashExp_2Result;
+  }
+
+  let googleSearchGroundingData15FlashResult_1: Grounding | null = null;
+  try {
+    const model = googleSearchModel15Flash();
+    const result = await model.generateContent(query);
+    googleSearchGroundingData15FlashResult_1 = transformGroundingData(result);
+  } catch (error) {
+    console.error(error);
+    returnErrors.push(
+      `googleSearchGroundingData15FlashResult_1: ${errorMessage(error)}`
+    );
+  }
+  if (googleSearchGroundingData15FlashResult_1) {
+    return googleSearchGroundingData15FlashResult_1;
+  }
+
+  let googleSearchGroundingData15FlashResult_2: Grounding | null = null;
+  try {
+    const model = googleSearchModel15Flash();
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: query }] }],
+      tools: [googleSearchRetrievalTool],
+    });
+    googleSearchGroundingData15FlashResult_2 = transformGroundingData(result);
+  } catch (error) {
+    console.error(error);
+    returnErrors.push(
+      `googleSearchGroundingData15FlashResult_2: ${errorMessage(error)}`
+    );
+  }
+  if (googleSearchGroundingData15FlashResult_2) {
+    return googleSearchGroundingData15FlashResult_2;
+  }
+
+  throw new Error(
+    "Failed to get google search grounding data. " + returnErrors.join(", ")
+  );
+}
+
+function transformGroundingData(result: GenerateContentResult): {
+  aiTextResponse: string;
+  groundings: GroundingData[];
+} {
   const response = result.response;
   const candidates = response?.candidates;
   const groundings: GroundingData[] = [];
