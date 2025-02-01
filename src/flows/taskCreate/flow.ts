@@ -50,7 +50,7 @@ export const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
   },
   async (input) => {
     const response = await genkitAI.generate({
-      prompt: `${input} の中からTODOリストを抽出して、要素を一つずつ小分けにしてください`,
+      prompt: `${input} の中からTODOリストを抽出して、要素を一つずつ分けて文字列の配列にしてください`,
       output: { schema: z.array(formatToJSONFromMarkdownAnswerSchema) },
     });
     const output = response.output;

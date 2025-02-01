@@ -81,6 +81,9 @@ export async function googleSearchGroundingData(
     });
     googleSearchGroundingData20FlashExp_1Result =
       transformGroundingData(result);
+    console.log(
+      JSON.stringify({ googleSearchGroundingData20FlashExp_1Result })
+    );
   } catch (error) {
     console.error(error);
 
@@ -101,6 +104,9 @@ export async function googleSearchGroundingData(
     const result = await model.generateContent(query);
     googleSearchGroundingData20FlashExp_2Result =
       transformGroundingData(result);
+    console.log(
+      JSON.stringify({ googleSearchGroundingData20FlashExp_2Result })
+    );
   } catch (error) {
     console.error(error);
     returnErrors.push(
@@ -119,6 +125,7 @@ export async function googleSearchGroundingData(
     const model = googleSearchModel15Flash();
     const result = await model.generateContent(query);
     googleSearchGroundingData15FlashResult_1 = transformGroundingData(result);
+    console.log(JSON.stringify({ googleSearchGroundingData15FlashResult_1 }));
   } catch (error) {
     console.error(error);
     returnErrors.push(
@@ -140,6 +147,7 @@ export async function googleSearchGroundingData(
       tools: [googleSearchRetrievalTool],
     });
     googleSearchGroundingData15FlashResult_2 = transformGroundingData(result);
+    console.log(JSON.stringify({ googleSearchGroundingData15FlashResult_2 }));
   } catch (error) {
     console.error(error);
     returnErrors.push(
