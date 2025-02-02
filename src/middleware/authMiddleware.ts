@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import admin from 'firebase-admin';
+import { Request, Response, NextFunction } from "express";
+import admin from "firebase-admin";
 
 interface AuthRequest extends Request {
   user?: admin.auth.DecodedIdToken;
@@ -10,14 +10,19 @@ export const authMiddleware = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  const authorizationHeader = req.headers.authorization;
-
-  if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
-    res.status(401).json({ message: '認証されていません' });
+  if (process.env.APP_ENV === "local") {
+    next();
     return;
   }
 
-  const idToken = authorizationHeader.split('Bearer ')[1];
+  const authorizationHeader = req.headers.authorization;
+
+  if (!authorizationHeader || !authorizationHeader.startsWith("Bearer ")) {
+    res.status(401).json({ message: "認証されていません" });
+    return;
+  }
+
+  const idToken = authorizationHeader.split("Bearer ")[1];
 
   try {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
