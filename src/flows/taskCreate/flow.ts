@@ -4,6 +4,7 @@ import { TaskSchema } from "../../entity/task";
 import { UserRequestSchema } from "../../entity/userRequest";
 import { TODOSchema } from "../../entity/todo";
 import { v4 as uuidv4 } from "uuid";
+import { authMiddleware } from "../../middleware/authMiddleware";
 
 const TODOCreateSchemaInput = z.object({
   question: z.string(),
@@ -104,6 +105,7 @@ export const taskCreateFlow = genkitAI.defineFlow(
       userRequest: UserRequestSchema,
     }),
     outputSchema: TaskSchema,
+    middleware: [authMiddleware],
   },
   async (input) => {
     const {
