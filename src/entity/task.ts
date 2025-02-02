@@ -6,7 +6,6 @@ export const TaskSchema = z.object({
   userID: z.string(),
   question: z.string(),
   aiTextResponse: z.string(),
-  todoIDs: z.array(z.string()),
   groundings: z.array(GroundingDataSchema),
   completed: z.boolean().default(false),
 });
