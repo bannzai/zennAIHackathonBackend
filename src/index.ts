@@ -23,4 +23,6 @@ export const test = genkitAI.defineFlow(
   }
 );
 
-genkitAI.startFlowServer({ flows: [taskCreate] });
+if (process.env.APP_ENV !== "local") {
+  genkitAI.startFlowServer({ flows: [taskCreate] });
+}
