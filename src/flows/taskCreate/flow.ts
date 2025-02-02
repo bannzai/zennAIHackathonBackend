@@ -1,10 +1,11 @@
 import { z } from "genkit";
 import { genkitAI, googleSearchGroundingData } from "../../utils/ai/ai";
-import { TaskSchema } from "../../entity/task";
+import { Task, TaskSchema } from "../../entity/task";
 import { UserRequestSchema } from "../../entity/userRequest";
-import { TODOSchema } from "../../entity/todo";
+import { TODO, TODOSchema } from "../../entity/todo";
 import { v4 as uuidv4 } from "uuid";
 import { authMiddleware } from "../../middleware/authMiddleware";
+import { database } from "../../utils/database/database";
 
 const TODOCreateSchemaInput = z.object({
   question: z.string(),
@@ -114,7 +115,9 @@ export const taskCreateFlow = genkitAI.defineFlow(
       question,
       userRequest: { userID },
     } = input;
-    const taskID = uuidv4();
+    const docRef = database.collection("tasks").doc();
+    const taskID = docRef.id;
+    const batch = database.batch();
 
     // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
     const { aiTextResponse, groundings } = await googleSearchGroundingData(
@@ -124,29 +127,38 @@ export const taskCreateFlow = genkitAI.defineFlow(
     const formatToJSONFromMarkdownAnswerResult =
       await formatToJSONFromMarkdownAnswer(aiTextResponse);
     const todos: z.infer<typeof TODOSchema>[] = [];
-    for (const todo of formatToJSONFromMarkdownAnswerResult) {
+    for (const result of formatToJSONFromMarkdownAnswerResult) {
       const todoID = uuidv4();
-      const gradingResult = await fetchGrounding(todo);
-      todos.push({
+      const gradingResult = await fetchGrounding(result);
+      const todo: TODO = {
         id: todoID,
         userID: userID,
         taskID: taskID,
-        content: todo.content,
-        supplement: todo.supplement,
+        content: result.content,
+        supplement: result.supplement,
         aiTextResponse: gradingResult.aiTextResponse,
         groundings: gradingResult.groundings,
-      });
+      };
+      todos.push(todo);
+
+      const todoDocRef = database.collection("todos").doc(todoID);
+      batch.set(todoDocRef, todo, { merge: true });
     }
 
-    return {
+    const task: Task = {
       id: taskID,
       userID: userID,
       question: question,
-      todoIDs: todos.map((todo) => todo.id),
-      todos: todos,
       aiTextResponse: aiTextResponse,
       groundings: groundings,
       completed: false,
+    };
+    batch.set(database.collection("tasks").doc(taskID), task);
+    await batch.commit();
+
+    return {
+      ...task,
+      todos: todos,
     };
   }
 );
