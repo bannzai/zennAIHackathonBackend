@@ -1,13 +1,12 @@
 import { z } from "zod";
 import { GroundingDataSchema } from "./grounding";
-import { TODOSchema } from "./todo";
 
 export const TaskSchema = z.object({
   id: z.string(),
   userID: z.string(),
   question: z.string(),
   aiTextResponse: z.string(),
-  todos: z.array(TODOSchema),
+  todoIDs: z.array(z.string()),
   groundings: z.array(GroundingDataSchema),
   completed: z.boolean().default(false),
 });

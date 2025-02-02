@@ -104,7 +104,9 @@ export const taskCreateFlow = genkitAI.defineFlow(
     inputSchema: TODOCreateSchemaInput.extend({
       userRequest: UserRequestSchema,
     }),
-    outputSchema: TaskSchema,
+    outputSchema: TaskSchema.extend({
+      todos: z.array(TODOSchema),
+    }),
     middleware: [authMiddleware],
   },
   async (input) => {
@@ -140,6 +142,7 @@ export const taskCreateFlow = genkitAI.defineFlow(
       id: taskID,
       userID: userID,
       question: question,
+      todoIDs: todos.map((todo) => todo.id),
       todos: todos,
       aiTextResponse: aiTextResponse,
       groundings: groundings,
