@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GroundingDataSchema } from "./grounding_url";
+import { GroundingDataSchema } from "./grounding";
 import { TODOSchema } from "./todo";
 
 export const TaskSchema = z.object({

@@ -10,7 +10,7 @@ import {
   SchemaType,
   Tool,
 } from "@google/generative-ai";
-import { GroundingData, GroundingDataSchema } from "../../entity/grounding_url";
+import { GroundingData, GroundingDataSchema } from "../../entity/grounding";
 import { errorMessage } from "../error/message";
 
 export const genkitAI = genkit({

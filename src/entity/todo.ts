@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GroundingDataSchema } from "./grounding_url";
+import { GroundingDataSchema } from "./grounding";
 
 export const TODOSchema = z.object({
   id: z.string(),
