@@ -153,7 +153,7 @@ export const taskCreateFlow = genkitAI.defineFlow(
       groundings: groundings,
       completed: false,
     };
-    batch.set(database.collection("tasks").doc(taskID), task);
+    batch.set(docRef, task, { merge: true });
     await batch.commit();
 
     return {
