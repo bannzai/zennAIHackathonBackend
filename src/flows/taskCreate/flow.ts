@@ -220,8 +220,8 @@ module.exports = genkitAI.defineFlow(
           userID,
           taskID,
           content,
-          aiTextResponse,
           supplement,
+          aiTextResponse,
           groundings,
         };
         todos.push(todo);
