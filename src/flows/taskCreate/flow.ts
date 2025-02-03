@@ -117,7 +117,7 @@ const generateDefinition = genkitAI.defineTool(
   async (input) => {
     console.log(`#generateDefinition: ${JSON.stringify({ input }, null, 2)}`);
     const { aiTextResponse, groundings } = await googleSearchGroundingData(
-      `「${input.topic}」。これについて説明してください。`
+      `「${input.topic}」。これについて説明してください。「${input.topic}」とは、から始まる文章にしてください`
     );
     return {
       aiTextResponse,
