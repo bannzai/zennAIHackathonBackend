@@ -5,6 +5,7 @@ export const TaskSchema = z.object({
   id: z.string(),
   userID: z.string(),
   question: z.string(),
+  topic: z.string(),
   definition: z.string(),
   aiTextResponse: z.string(),
   groundings: z.array(GroundingDataSchema),

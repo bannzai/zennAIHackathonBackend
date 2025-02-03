@@ -71,25 +71,49 @@ const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
   }
 );
 
-const generateDefinition = genkitAI.defineTool(
+const extractTopic = genkitAI.defineTool(
   {
-    name: "generateDefinition",
-    description: "generate definition",
+    name: "extractTopic",
+    description: "extract topic",
     inputSchema: z.object({
       question: z.string(),
     }),
     outputSchema: z.string(),
   },
   async (input) => {
+    console.log(`#extractTopic: ${JSON.stringify({ input }, null, 2)}`);
+    const response = await genkitAI.generate({
+      prompt: `「${input.question}」。この質問の対象となるトピックを抜き出してください。例) 「確定申告の方法」だと「確定申告」と答えて欲しいです。「結婚の際にやること」だと「結婚」と答えて欲しいです`,
+      output: { schema: z.object({ topic: z.string() }) },
+    });
+    const topic = response.output;
+    if (!topic) {
+      throw new Error("topic output is null");
+    }
+    return topic.topic;
+  }
+);
+
+const generateDefinition = genkitAI.defineTool(
+  {
+    name: "generateDefinition",
+    description: "generate definition",
+    inputSchema: z.object({
+      topic: z.string(),
+    }),
+    outputSchema: z.string(),
+  },
+  async (input) => {
     console.log(`#generateDefinition: ${JSON.stringify({ input }, null, 2)}`);
     const response = await genkitAI.generate({
-      prompt: `「${input.question}」。この質問に対する前提をまず整理したいと考えています。この質問の内容に出てくる主語を説明してください`,
+      prompt: `「${input.topic}」。これについて解説してください。`,
+      output: { schema: z.object({ definition: z.string() }) },
     });
-    const output = response.text;
-    if (!output) {
-      throw new Error("output is null");
+    const definition = response.output;
+    if (!definition) {
+      throw new Error("definition output is null");
     }
-    return output;
+    return definition.definition;
   }
 );
 
@@ -194,12 +218,14 @@ module.exports = genkitAI.defineFlow(
         console.log(`set todo: ${JSON.stringify({ todo }, null, 2)}`);
       }
 
-      const definition = await generateDefinition({ question });
+      const topic = await extractTopic({ question });
+      const definition = await generateDefinition({ topic });
 
       const task: Task = {
         id: taskID,
         userID: userID,
         question: question,
+        topic: topic,
         definition: definition,
         aiTextResponse: aiTextResponse,
         groundings: groundings,
