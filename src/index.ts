@@ -23,6 +23,5 @@ export const test = genkitAI.defineFlow(
   }
 );
 
-if (process.env.APP_ENV !== "local") {
-  genkitAI.startFlowServer({ port: 8080, flows: [taskCreate] });
-}
+// NOTE: default port number is 3400
+genkitAI.startFlowServer({ flows: [taskCreate] });
