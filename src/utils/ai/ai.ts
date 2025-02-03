@@ -70,6 +70,9 @@ type Grounding = z.infer<typeof GroundingSchema>;
 export async function googleSearchGroundingData(
   query: string
 ): Promise<Grounding> {
+  console.log(
+    `#googleSearchGroundingData: ${JSON.stringify({ query }, null, 2)}`
+  );
   const returnErrors: any[] = [];
 
   let googleSearchGroundingData20FlashExp_1Result: Grounding | null = null;
