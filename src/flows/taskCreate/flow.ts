@@ -37,14 +37,25 @@ const responseWithGrounding = genkitAI.defineTool(
   },
   async (input) => {
     console.log(`#responseWithGrounding: ${JSON.stringify(input, null, 2)}`);
-    const { aiTextResponse, groundings } = await googleSearchGroundingData(
-      `${input.content}, ${input.supplement} に関する情報を要約してください`
-    );
+    if (!input.supplement) {
+      const { aiTextResponse, groundings } = await googleSearchGroundingData(
+        `${input.content} に関する情報を要約してください`
+      );
 
-    return {
-      aiTextResponse,
-      groundings,
-    };
+      return {
+        aiTextResponse,
+        groundings,
+      };
+    } else {
+      const { aiTextResponse, groundings } = await googleSearchGroundingData(
+        `${input.content}, ${input.supplement} に関する情報を要約してください`
+      );
+
+      return {
+        aiTextResponse,
+        groundings,
+      };
+    }
   }
 );
 
