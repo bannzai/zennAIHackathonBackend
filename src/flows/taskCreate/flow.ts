@@ -132,7 +132,7 @@ module.exports = genkitAI.defineFlow(
         question,
         userRequest: { userID },
       } = input;
-      const docRef = database.collection("tasks").doc();
+      const docRef = database.collection(`/users/${userID}/tasks`).doc();
       const taskID = docRef.id;
       const batch = database.batch();
 
@@ -158,7 +158,9 @@ module.exports = genkitAI.defineFlow(
         };
         todos.push(todo);
 
-        const todoDocRef = database.collection("todos").doc(todoID);
+        const todoDocRef = database
+          .collection(`/users/${userID}/tasks/${taskID}/todos`)
+          .doc(todoID);
         batch.set(todoDocRef, todo, { merge: true });
       }
 
