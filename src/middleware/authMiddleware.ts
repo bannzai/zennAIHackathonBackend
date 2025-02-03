@@ -3,7 +3,8 @@ import admin from "firebase-admin";
 import { auth } from "../utils/firebase/firebase";
 
 interface AuthRequest extends Request {
-  user?: admin.auth.DecodedIdToken;
+  userID?: string;
+  idToken?: admin.auth.DecodedIdToken;
 }
 
 export const authMiddleware = async (
@@ -27,7 +28,17 @@ export const authMiddleware = async (
 
   try {
     const decodedToken = await auth.verifyIdToken(idToken);
-    req.user = decodedToken;
+    const userID = decodedToken.uid;
+
+    if (req.body.userRequest?.userID) {
+      if (req.body.userRequest.userID !== userID) {
+        res.status(403).json({ message: "権限がありません" });
+        return;
+      }
+    }
+
+    req.userID = userID;
+    req.idToken = decodedToken;
     next();
   } catch (error) {
     next(error);
