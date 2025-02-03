@@ -70,6 +70,30 @@ const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
     return output;
   }
 );
+
+const generateDefinition = genkitAI.defineTool(
+  {
+    name: "generateDefinition",
+    description: "generate definition",
+    inputSchema: z.object({
+      question: z.string(),
+    }),
+    outputSchema: z.string(),
+  },
+  async (input) => {
+    console.log(`#generateDefinition: ${JSON.stringify({ input }, null, 2)}`);
+    const response = await genkitAI.generate({
+      prompt: `「${input.question}」。この質問に対する前提をまず整理したいと考えています。この質問の内容に出てくる主語を説明してください`,
+      output: { schema: z.string() },
+    });
+    const output = response.output;
+    if (!output) {
+      throw new Error("output is null");
+    }
+    return output;
+  }
+);
+
 // NOTE: Grounding x JSON modeは使用できない
 // const options: GenerateOptions = {
 //   prompt: `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください`,
@@ -171,10 +195,13 @@ module.exports = genkitAI.defineFlow(
         console.log(`set todo: ${JSON.stringify({ todo }, null, 2)}`);
       }
 
+      const definition = await generateDefinition({ question });
+
       const task: Task = {
         id: taskID,
         userID: userID,
         question: question,
+        definition: definition,
         aiTextResponse: aiTextResponse,
         groundings: groundings,
         completed: false,
