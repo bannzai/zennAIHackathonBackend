@@ -119,7 +119,7 @@ const ResponseSchema = z.union([
 
 module.exports = genkitAI.defineFlow(
   {
-    name: "taskCreateFlow",
+    name: "taskCreate",
     inputSchema: TaskCreateSchema.extend({
       userRequest: UserRequestSchema,
     }),
