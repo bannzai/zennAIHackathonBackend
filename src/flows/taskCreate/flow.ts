@@ -5,7 +5,7 @@ import { UserRequestSchema } from "../../entity/userRequest";
 import { TODO, TODOSchema } from "../../entity/todo";
 import { v4 as uuidv4 } from "uuid";
 import { authMiddleware } from "../../middleware/authMiddleware";
-import { database } from "../../utils/database/database";
+import { database } from "../../utils/firebase/firebase";
 
 const TODOCreateSchemaInput = z.object({
   question: z.string(),
