@@ -2,7 +2,6 @@ import { z } from "zod";
 import { genkitAI, googleSearchGroundingData } from "./utils/ai/ai";
 import { authMiddleware } from "./middleware/authMiddleware";
 
-
 export const taskCreate = require("./flows/taskCreate/flow");
 
 export const test = genkitAI.defineFlow(
@@ -25,5 +24,5 @@ export const test = genkitAI.defineFlow(
 );
 
 if (process.env.APP_ENV !== "local") {
-  genkitAI.startFlowServer({ flows: [taskCreate] });
+  genkitAI.startFlowServer({ port: 8080, flows: [taskCreate] });
 }
