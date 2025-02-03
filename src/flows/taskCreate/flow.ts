@@ -6,8 +6,15 @@ import { TODO, TODOSchema } from "../../entity/todo";
 import { v4 as uuidv4 } from "uuid";
 import { authMiddleware } from "../../middleware/authMiddleware";
 import { database } from "../../utils/firebase/firebase";
+import {
+  DataResponseSchema,
+  errorResponse,
+  ErrorResponseSchema,
+} from "../../entity/response";
+import { ResponseSchema } from "@google/generative-ai";
+import { errorMessage } from "../../utils/error/message";
 
-const TODOCreateSchemaInput = z.object({
+const TaskCreateSchema = z.object({
   question: z.string(),
 });
 
@@ -99,67 +106,88 @@ const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
 
 // return json;
 
+const ResponseSchema = z.union([
+  DataResponseSchema.extend({
+    data: z.object({
+      task: TaskSchema.extend({
+        todos: z.array(TODOSchema),
+      }),
+    }),
+  }),
+  ErrorResponseSchema,
+]);
+
 module.exports = genkitAI.defineFlow(
   {
     name: "taskCreateFlow",
-    inputSchema: TODOCreateSchemaInput.extend({
+    inputSchema: TaskCreateSchema.extend({
       userRequest: UserRequestSchema,
     }),
-    outputSchema: TaskSchema.extend({
-      todos: z.array(TODOSchema),
-    }),
+    outputSchema: ResponseSchema,
     middleware: [authMiddleware],
   },
   async (input) => {
-    const {
-      question,
-      userRequest: { userID },
-    } = input;
-    const docRef = database.collection("tasks").doc();
-    const taskID = docRef.id;
-    const batch = database.batch();
+    try {
+      const {
+        question,
+        userRequest: { userID },
+      } = input;
+      const docRef = database.collection("tasks").doc();
+      const taskID = docRef.id;
+      const batch = database.batch();
 
-    // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
-    const { aiTextResponse, groundings } = await googleSearchGroundingData(
-      `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
-    );
+      // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
+      const { aiTextResponse, groundings } = await googleSearchGroundingData(
+        `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
+      );
 
-    const formatToJSONFromMarkdownAnswerResult =
-      await formatToJSONFromMarkdownAnswer(aiTextResponse);
-    const todos: z.infer<typeof TODOSchema>[] = [];
-    for (const result of formatToJSONFromMarkdownAnswerResult) {
-      const todoID = uuidv4();
-      const gradingResult = await fetchGrounding(result);
-      const todo: TODO = {
-        id: todoID,
+      const formatToJSONFromMarkdownAnswerResult =
+        await formatToJSONFromMarkdownAnswer(aiTextResponse);
+      const todos: z.infer<typeof TODOSchema>[] = [];
+      for (const result of formatToJSONFromMarkdownAnswerResult) {
+        const todoID = uuidv4();
+        const gradingResult = await fetchGrounding(result);
+        const todo: TODO = {
+          id: todoID,
+          userID: userID,
+          taskID: taskID,
+          content: result.content,
+          supplement: result.supplement,
+          aiTextResponse: gradingResult.aiTextResponse,
+          groundings: gradingResult.groundings,
+        };
+        todos.push(todo);
+
+        const todoDocRef = database.collection("todos").doc(todoID);
+        batch.set(todoDocRef, todo, { merge: true });
+      }
+
+      const task: Task = {
+        id: taskID,
         userID: userID,
-        taskID: taskID,
-        content: result.content,
-        supplement: result.supplement,
-        aiTextResponse: gradingResult.aiTextResponse,
-        groundings: gradingResult.groundings,
+        question: question,
+        aiTextResponse: aiTextResponse,
+        groundings: groundings,
+        completed: false,
       };
-      todos.push(todo);
+      batch.set(docRef, task, { merge: true });
+      await batch.commit();
 
-      const todoDocRef = database.collection("todos").doc(todoID);
-      batch.set(todoDocRef, todo, { merge: true });
+      const response: z.infer<typeof ResponseSchema> = {
+        result: "OK",
+        statusCode: 200,
+        data: {
+          task: {
+            ...task,
+            todos: todos,
+          },
+        },
+      };
+
+      return response;
+    } catch (error) {
+      return errorResponse(error);
     }
-
-    const task: Task = {
-      id: taskID,
-      userID: userID,
-      question: question,
-      aiTextResponse: aiTextResponse,
-      groundings: groundings,
-      completed: false,
-    };
-    batch.set(docRef, task, { merge: true });
-    await batch.commit();
-
-    return {
-      ...task,
-      todos: todos,
-    };
   }
 );
 
