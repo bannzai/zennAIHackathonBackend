@@ -23,20 +23,20 @@ const formatToJSONFromMarkdownAnswerSchema = TODOSchema.pick({
   supplement: true,
 });
 
-const fetchGroundingSchema = TODOSchema.pick({
+const responseWithGroundingSchema = TODOSchema.pick({
   aiTextResponse: true,
   groundings: true,
 });
 
-const fetchGrounding = genkitAI.defineTool(
+const responseWithGrounding = genkitAI.defineTool(
   {
-    name: "fetchGrounding",
-    description: "fetchGrounding",
+    name: "responseWithGrounding",
+    description: "responseWithGrounding",
     inputSchema: formatToJSONFromMarkdownAnswerSchema,
-    outputSchema: fetchGroundingSchema,
+    outputSchema: responseWithGroundingSchema,
   },
   async (input) => {
-    console.log(`#fetchGrounding: ${JSON.stringify(input, null, 2)}`);
+    console.log(`#responseWithGrounding: ${JSON.stringify(input, null, 2)}`);
     const { aiTextResponse, groundings } = await googleSearchGroundingData(
       `${input.content}, ${input.supplement} に関する情報を要約してください`
     );
@@ -196,17 +196,23 @@ module.exports = genkitAI.defineFlow(
       const formatToJSONFromMarkdownAnswerResult =
         await formatToJSONFromMarkdownAnswer(aiTextResponse);
       const todos: z.infer<typeof TODOSchema>[] = [];
-      for (const result of formatToJSONFromMarkdownAnswerResult) {
+      for (const {
+        content,
+        supplement,
+      } of formatToJSONFromMarkdownAnswerResult) {
         const todoID = uuidv4();
-        const gradingResult = await fetchGrounding(result);
+        const { aiTextResponse, groundings } = await responseWithGrounding({
+          content,
+          supplement,
+        });
         const todo: TODO = {
           id: todoID,
-          userID: userID,
-          taskID: taskID,
-          content: result.content,
-          supplement: result.supplement,
-          aiTextResponse: gradingResult.aiTextResponse,
-          groundings: gradingResult.groundings,
+          userID,
+          taskID,
+          content,
+          supplement,
+          aiTextResponse,
+          groundings,
         };
         todos.push(todo);
 
