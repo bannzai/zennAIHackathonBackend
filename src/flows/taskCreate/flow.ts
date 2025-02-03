@@ -36,6 +36,7 @@ const fetchGrounding = genkitAI.defineTool(
     outputSchema: fetchGroundingSchema,
   },
   async (input) => {
+    console.log("#fetchGrounding: ", input);
     const { aiTextResponse, groundings } = await googleSearchGroundingData(
       `${input.content}, ${input.supplement} に関する情報を要約してください`
     );
@@ -55,6 +56,7 @@ const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
     outputSchema: z.array(formatToJSONFromMarkdownAnswerSchema),
   },
   async (input) => {
+    console.log("#formatToJSONFromMarkdownAnswer: ", input);
     const response = await genkitAI.generate({
       prompt: `${input} の中からTODOリストを抽出して、要素を一つずつ分けて文字列の配列にしてください`,
       output: { schema: z.array(formatToJSONFromMarkdownAnswerSchema) },
@@ -127,6 +129,7 @@ module.exports = genkitAI.defineFlow(
     middleware: [authMiddleware],
   },
   async (input) => {
+    console.log("#taskCreate: ", input);
     try {
       const {
         question,
@@ -162,6 +165,8 @@ module.exports = genkitAI.defineFlow(
           .collection(`/users/${userID}/tasks/${taskID}/todos`)
           .doc(todoID);
         batch.set(todoDocRef, todo, { merge: true });
+
+        console.log("set todo: ", todo);
       }
 
       const task: Task = {
@@ -174,6 +179,8 @@ module.exports = genkitAI.defineFlow(
       };
       batch.set(docRef, task, { merge: true });
       await batch.commit();
+
+      console.log("set task: ", task);
 
       const response: z.infer<typeof ResponseSchema> = {
         result: "OK",
