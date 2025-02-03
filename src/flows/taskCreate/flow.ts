@@ -189,12 +189,13 @@ module.exports = genkitAI.defineFlow(
       const batch = database.batch();
 
       // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
-      const { aiTextResponse, groundings } = await googleSearchGroundingData(
-        `${question} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
-      );
+      const { aiTextResponse: todoAITextResponse, groundings: todoGroundings } =
+        await googleSearchGroundingData(
+          `${question} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
+        );
 
       const formatToJSONFromMarkdownAnswerResult =
-        await formatToJSONFromMarkdownAnswer(aiTextResponse);
+        await formatToJSONFromMarkdownAnswer(todoAITextResponse);
       const todos: z.infer<typeof TODOSchema>[] = [];
       for (const {
         content,
@@ -210,8 +211,8 @@ module.exports = genkitAI.defineFlow(
           userID,
           taskID,
           content,
-          supplement,
           aiTextResponse,
+          supplement,
           groundings,
         };
         todos.push(todo);
@@ -226,15 +227,20 @@ module.exports = genkitAI.defineFlow(
 
       const topic = await extractTopic({ question });
       const definition = await generateDefinition({ topic });
+      const shortAnswerResponse = await genkitAI.generate({
+        prompt: `${question} を短く回答してください`,
+      });
+      const shortAnswer = shortAnswerResponse.text;
 
       const task: Task = {
         id: taskID,
-        userID: userID,
-        question: question,
-        topic: topic,
-        definition: definition,
-        aiTextResponse: aiTextResponse,
-        groundings: groundings,
+        userID,
+        question,
+        todoAITextResponse,
+        todoGroundings,
+        shortAnswer,
+        topic,
+        definition,
         completed: false,
       };
       batch.set(docRef, task, { merge: true });
