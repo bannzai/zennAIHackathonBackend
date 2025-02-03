@@ -84,9 +84,8 @@ const generateDefinition = genkitAI.defineTool(
     console.log(`#generateDefinition: ${JSON.stringify({ input }, null, 2)}`);
     const response = await genkitAI.generate({
       prompt: `「${input.question}」。この質問に対する前提をまず整理したいと考えています。この質問の内容に出てくる主語を説明してください`,
-      output: { schema: z.string() },
     });
-    const output = response.output;
+    const output = response.text;
     if (!output) {
       throw new Error("output is null");
     }
