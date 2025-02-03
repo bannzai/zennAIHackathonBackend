@@ -143,7 +143,7 @@ module.exports = genkitAI.defineFlow(
 
       // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
       const { aiTextResponse, groundings } = await googleSearchGroundingData(
-        `${"結婚に必要なこと"} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
+        `${question} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
       );
 
       const formatToJSONFromMarkdownAnswerResult =
