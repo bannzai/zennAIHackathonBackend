@@ -15,7 +15,9 @@ export const TaskSchema = z.object({
   // 質問の内容の対象となるトピック。例) question: 「確定申告の方法」だと「確定申告」
   topic: z.string(),
   // 質問の内容の対象となるトピックについての解説
-  definition: z.string(),
+  definitionAITextResponse: z.string(),
+  // TODOのAIの回答のソースとなったもの
+  definitionGroundings: z.array(GroundingDataSchema),
   completed: z.boolean().default(false),
 });
 

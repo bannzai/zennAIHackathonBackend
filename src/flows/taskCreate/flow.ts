@@ -112,19 +112,17 @@ const generateDefinition = genkitAI.defineTool(
     inputSchema: z.object({
       topic: z.string(),
     }),
-    outputSchema: z.string(),
+    outputSchema: responseWithGroundingSchema,
   },
   async (input) => {
     console.log(`#generateDefinition: ${JSON.stringify({ input }, null, 2)}`);
-    const response = await genkitAI.generate({
-      prompt: `「${input.topic}」。これについて解説してください。`,
-      output: { schema: z.object({ definition: z.string() }) },
-    });
-    const definition = response.output;
-    if (!definition) {
-      throw new Error("definition output is null");
-    }
-    return definition.definition;
+    const { aiTextResponse, groundings } = await googleSearchGroundingData(
+      `「${input.topic}」。これについて説明してください。`
+    );
+    return {
+      aiTextResponse,
+      groundings,
+    };
   }
 );
 
@@ -237,7 +235,10 @@ module.exports = genkitAI.defineFlow(
       }
 
       const topic = await extractTopic({ question });
-      const definition = await generateDefinition({ topic });
+      const {
+        aiTextResponse: definitionAITextResponse,
+        groundings: definitionGroundings,
+      } = await generateDefinition({ topic });
       const shortAnswerResponse = await genkitAI.generate({
         prompt: `${question} を短く回答してください`,
       });
@@ -251,7 +252,8 @@ module.exports = genkitAI.defineFlow(
         todoGroundings,
         shortAnswer,
         topic,
-        definition,
+        definitionAITextResponse,
+        definitionGroundings,
         completed: false,
       };
       batch.set(docRef, task, { merge: true });
