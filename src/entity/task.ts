@@ -7,9 +7,9 @@ export const TaskSchema = z.object({
   // 質問の内容
   question: z.string(),
   // TODOの質問の内容の回答をAIに渡して、AIが回答した内容
-  todoAITextResponse: z.string(),
+  todosAITextResponseMarkdown: z.string(),
   // TODOのAIの回答のソースとなったもの
-  todoGroundings: z.array(GroundingDataSchema),
+  todosGroundings: z.array(GroundingDataSchema),
   // 質問の内容を短く回答したもの
   shortAnswer: z.string(),
   // 質問の内容の対象となるトピック。例) question: 「確定申告の方法」だと「確定申告」

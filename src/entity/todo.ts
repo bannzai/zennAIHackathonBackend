@@ -7,7 +7,7 @@ export const TODOSchema = z.object({
   taskID: z.string(),
   content: z.string().describe("TODOの内容"),
   supplement: z.string().describe("補足情報"),
-  aiTextResponse: z.string(),
+  aiTextResponseMarkdown: z.string(),
   groundings: z.array(GroundingDataSchema),
 });
 

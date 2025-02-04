@@ -13,6 +13,7 @@ import {
 } from "../../entity/response";
 import { ResponseSchema } from "@google/generative-ai";
 import { errorMessage } from "../../utils/error/message";
+import { GroundingDataSchema } from "../../entity/grounding";
 
 const TaskCreateSchema = z.object({
   question: z.string(),
@@ -23,23 +24,23 @@ const formatToJSONFromMarkdownAnswerSchema = TODOSchema.pick({
   supplement: true,
 });
 
-const responseWithGroundingSchema = TODOSchema.pick({
-  aiTextResponse: true,
-  groundings: true,
+const todoWithGroundingSchema = z.object({
+  aiTextResponse: z.string(),
+  groundings: z.array(GroundingDataSchema),
 });
 
-const responseWithGrounding = genkitAI.defineTool(
+const todoWithGrounding = genkitAI.defineTool(
   {
-    name: "responseWithGrounding",
-    description: "responseWithGrounding",
+    name: "todoWithGrounding",
+    description: "todoWithGrounding",
     inputSchema: formatToJSONFromMarkdownAnswerSchema,
-    outputSchema: responseWithGroundingSchema,
+    outputSchema: todoWithGroundingSchema,
   },
   async (input) => {
-    console.log(`#responseWithGrounding: ${JSON.stringify(input, null, 2)}`);
+    console.log(`#todoWithGrounding: ${JSON.stringify(input, null, 2)}`);
     if (!input.supplement) {
       const { aiTextResponse, groundings } = await googleSearchGroundingData(
-        `${input.content} に関する情報を要約してください`
+        `題名: ${input.content} を詳細に説明してください。出力はmarkdown形式にしてください`
       );
 
       return {
@@ -48,7 +49,7 @@ const responseWithGrounding = genkitAI.defineTool(
       };
     } else {
       const { aiTextResponse, groundings } = await googleSearchGroundingData(
-        `${input.content}, ${input.supplement} に関する情報を要約してください`
+        `題名: ${input.content}, 補足: ${input.supplement} を詳細に説明してください。出力はmarkdown形式にしてください`
       );
 
       return {
@@ -112,7 +113,7 @@ const generateDefinition = genkitAI.defineTool(
     inputSchema: z.object({
       topic: z.string(),
     }),
-    outputSchema: responseWithGroundingSchema,
+    outputSchema: todoWithGroundingSchema,
   },
   async (input) => {
     console.log(`#generateDefinition: ${JSON.stringify({ input }, null, 2)}`);
@@ -198,20 +199,22 @@ module.exports = genkitAI.defineFlow(
       const batch = database.batch();
 
       // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
-      const { aiTextResponse: todoAITextResponse, groundings: todoGroundings } =
-        await googleSearchGroundingData(
-          `${question} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
-        );
+      const {
+        aiTextResponse: todosAITextResponseMarkdown,
+        groundings: todosGroundings,
+      } = await googleSearchGroundingData(
+        `${question} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
+      );
 
       const formatToJSONFromMarkdownAnswerResult =
-        await formatToJSONFromMarkdownAnswer(todoAITextResponse);
+        await formatToJSONFromMarkdownAnswer(todosAITextResponseMarkdown);
       const todos: z.infer<typeof TODOSchema>[] = [];
       for (const {
         content,
         supplement,
       } of formatToJSONFromMarkdownAnswerResult) {
         const todoID = uuidv4();
-        const { aiTextResponse, groundings } = await responseWithGrounding({
+        const { aiTextResponse, groundings } = await todoWithGrounding({
           content,
           supplement,
         });
@@ -221,7 +224,7 @@ module.exports = genkitAI.defineFlow(
           taskID,
           content,
           supplement,
-          aiTextResponse,
+          aiTextResponseMarkdown: aiTextResponse,
           groundings,
         };
         todos.push(todo);
@@ -248,8 +251,8 @@ module.exports = genkitAI.defineFlow(
         id: taskID,
         userID,
         question,
-        todoAITextResponse,
-        todoGroundings,
+        todosAITextResponseMarkdown,
+        todosGroundings,
         shortAnswer,
         topic,
         definitionAITextResponse,
