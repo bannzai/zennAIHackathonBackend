@@ -26,8 +26,3 @@ export const test = genkitAI.defineFlow(
     return aiTextResponse;
   }
 );
-
-// NOTE: default port number is 3400
-genkitAI.startFlowServer({
-  flows: [taskCreate, enqueueTaskCreate],
-});
