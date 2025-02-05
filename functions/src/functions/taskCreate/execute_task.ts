@@ -8,11 +8,11 @@ import { errorMessage } from "../../utils/error/message";
 export const executeTaskCreate = onTaskDispatched(
   {
     retryConfig: {
-      maxAttempts: 5,
+      maxAttempts: 3,
       minBackoffSeconds: 60,
     },
     rateLimits: {
-      maxConcurrentDispatches: 6,
+      maxConcurrentDispatches: 3,
     },
     timeoutSeconds: 10 * 60,
     memory: "1GiB",
