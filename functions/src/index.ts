@@ -3,7 +3,8 @@
 import { initializeApp } from "firebase-admin/app";
 
 initializeApp({
-  serviceAccountId: process.env.SERVICE_ACCOUNT_ID,
+  serviceAccountId:
+    process.env.GOOGLE_APPLICATION_CREDENTIALS_SERVICE_ACCOUNT_ID,
 });
 
 import { z } from "zod";
