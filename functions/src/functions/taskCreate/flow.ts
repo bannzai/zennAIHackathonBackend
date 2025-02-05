@@ -1,6 +1,10 @@
 import { z } from "genkit";
 import { genkitAI, googleSearchGroundingData } from "../../utils/ai/ai";
-import { Task, TaskSchema } from "../../entity/task";
+import {
+  TaskFullFilled,
+  TaskLoadingSchema,
+  TaskSchema,
+} from "../../entity/task";
 import { TODO, TODOSchema } from "../../entity/todo";
 import { v4 as uuidv4 } from "uuid";
 import { database } from "../../utils/firebase/firebase";
@@ -11,6 +15,8 @@ import {
 } from "../../entity/response";
 import { GroundingDataSchema } from "../../entity/grounding";
 import { TaskCreateSchema } from "./input";
+import { firestoreTimestampJSON } from "../../entity/util/timestamp";
+import { Timestamp } from "firebase-admin/firestore";
 
 const FormatToJSONFromMarkdownAnswerSchema = TODOSchema.pick({
   content: true,
@@ -163,14 +169,13 @@ const generateDefinition = genkitAI.defineTool(
 export const ResponseSchema = z.union([
   DataResponseSchema.extend({
     data: z.object({
-      task: TaskSchema.extend({
-        todos: z.array(TODOSchema),
-      }),
+      task: TaskSchema,
     }),
   }),
   ErrorResponseSchema,
 ]);
 
+// このflowはCloud Taskから使用されるのでエラーハンドリングは慎重に
 export const taskCreate = genkitAI.defineFlow(
   {
     name: "taskCreate",
@@ -186,6 +191,18 @@ export const taskCreate = genkitAI.defineFlow(
         question,
         userRequest: { userID },
       } = input;
+      const taskDocRef = database.doc(`/users/${userID}/tasks/${taskID}`);
+      const taskDocSnapshot = await taskDocRef.get();
+      const taskLoadingData = TaskLoadingSchema.safeParse(
+        taskDocSnapshot.data()
+      );
+      if (!taskLoadingData.success || taskLoadingData.data == null) {
+        return errorResponse(
+          new Error(`task loading parse error: ${taskLoadingData.error}`)
+        );
+      }
+      const taskLoading = taskLoadingData.data;
+
       const batch = database.batch();
 
       // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
@@ -237,7 +254,8 @@ export const taskCreate = genkitAI.defineFlow(
       });
       const shortAnswer = shortAnswerResponse.text;
 
-      const task: Task = {
+      const task: TaskFullFilled = {
+        status: "fulfilled",
         id: taskID,
         userID,
         question,
@@ -248,8 +266,10 @@ export const taskCreate = genkitAI.defineFlow(
         definitionAITextResponse,
         definitionGroundings,
         completed: false,
+        fullFilledDateTime: firestoreTimestampJSON(Timestamp.now()),
+        serverCreatedDateTime: taskLoading.serverCreatedDateTime,
+        serverUpdatedDateTime: taskLoading.serverUpdatedDateTime,
       };
-      const taskDocRef = database.doc(`/users/${userID}/tasks/${taskID}`);
       batch.set(taskDocRef, task, { merge: true });
       await batch.commit();
 
@@ -261,7 +281,6 @@ export const taskCreate = genkitAI.defineFlow(
         data: {
           task: {
             ...task,
-            todos: todos,
           },
         },
       };
