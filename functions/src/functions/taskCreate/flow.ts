@@ -176,9 +176,7 @@ const ResponseSchema = z.union([
 export const taskCreate = genkitAI.defineFlow(
   {
     name: "taskCreate",
-    inputSchema: TaskCreateSchema.extend({
-      userRequest: UserRequestSchema,
-    }),
+    inputSchema: TaskCreateSchema,
     outputSchema: ResponseSchema,
     middleware: [authMiddleware],
   },
