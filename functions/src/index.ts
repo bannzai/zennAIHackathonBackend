@@ -1,19 +1,27 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * import {onCall} from "firebase-functions/v2/https";
- * import {onDocumentWritten} from "firebase-functions/v2/firestore";
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+import { z } from "zod";
+import { genkitAI, googleSearchGroundingData } from "./utils/ai/ai";
+import { authMiddleware } from "./middleware/authMiddleware";
 
-import {onRequest} from "firebase-functions/v2/https";
-import * as logger from "firebase-functions/logger";
+export const taskCreate = require("./flows/taskCreate/flow");
 
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
+export const test = genkitAI.defineFlow(
+  {
+    name: "askForIngredientsFlow",
+    inputSchema: z.string(),
+    outputSchema: z.string(),
+    middleware: [authMiddleware],
+  },
+  async (question: string) => {
+    const { aiTextResponse, groundings } = await googleSearchGroundingData(
+      question
+    );
 
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+    if (!aiTextResponse) {
+      throw new Error("Failed to generate ingredients");
+    }
+    return aiTextResponse;
+  }
+);
+
+// NOTE: default port number is 3400
+genkitAI.startFlowServer({ flows: [taskCreate] });
