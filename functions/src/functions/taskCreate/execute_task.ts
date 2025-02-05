@@ -1,8 +1,8 @@
+import functions from "firebase-functions";
 import { z } from "zod";
 import { onTaskDispatched } from "firebase-functions/tasks";
 import { taskCreate } from "./flow";
 import { TaskCreateSchema } from "./input";
-import { error } from "firebase-functions/logger";
 import { errorMessage } from "../../utils/error/message";
 
 export const executeTaskCreate = onTaskDispatched(
@@ -24,7 +24,7 @@ export const executeTaskCreate = onTaskDispatched(
       // TODO: Change state `Task` to `Done`;
       return;
     } catch (err) {
-      console.error(errorMessage(err));
+      functions.logger.error(errorMessage(err));
       return;
     }
   }
