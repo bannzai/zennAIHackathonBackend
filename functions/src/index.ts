@@ -29,5 +29,5 @@ export const test = genkitAI.defineFlow(
 
 // NOTE: default port number is 3400
 genkitAI.startFlowServer({
-  flows: [taskCreate, enqueueTaskCreate, executeTaskCreate],
+  flows: [taskCreate, enqueueTaskCreate],
 });
