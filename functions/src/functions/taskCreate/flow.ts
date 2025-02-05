@@ -18,7 +18,7 @@ import { TaskCreateSchema } from "./input";
 import { firestoreTimestampJSON } from "../../entity/util/timestamp";
 import { Timestamp } from "firebase-admin/firestore";
 
-const FormatToJSONFromMarkdownAnswerSchema = TODOSchema.pick({
+const TODOContentFromMarkdownSchema = TODOSchema.pick({
   content: true,
   supplement: true,
 });
@@ -32,7 +32,7 @@ const todoWithGrounding = genkitAI.defineTool(
   {
     name: "todoWithGrounding",
     description: "todoWithGrounding",
-    inputSchema: FormatToJSONFromMarkdownAnswerSchema,
+    inputSchema: TODOContentFromMarkdownSchema,
     outputSchema: TODOWithGroundingSchema,
   },
   async (input) => {
@@ -59,12 +59,12 @@ const todoWithGrounding = genkitAI.defineTool(
   }
 );
 
-const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
+const todoContentFromMarkdown = genkitAI.defineTool(
   {
-    name: "formatToJSONFromMarkdownAnswer",
-    description: "format to json from markdown answer",
+    name: "todoContentFromMarkdown",
+    description: "todo content from markdown",
     inputSchema: z.string().describe("answer of question. markdown format"),
-    outputSchema: z.array(FormatToJSONFromMarkdownAnswerSchema),
+    outputSchema: z.array(TODOContentFromMarkdownSchema),
   },
   async (input) => {
     console.log(
@@ -72,7 +72,7 @@ const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
     );
     const response = await genkitAI.generate({
       prompt: `${input} の中からTODOリストを抽出して、要素を一つずつ分けて文字列の配列にしてください`,
-      output: { schema: z.array(FormatToJSONFromMarkdownAnswerSchema) },
+      output: { schema: z.array(TODOContentFromMarkdownSchema) },
     });
     const output = response.output;
     if (!output) {
@@ -204,7 +204,6 @@ export const taskCreate = genkitAI.defineFlow(
       const taskLoading = taskLoadingData.data;
 
       const batch = database.batch();
-
       // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
       const {
         aiTextResponse: todosAITextResponseMarkdown,
@@ -212,9 +211,8 @@ export const taskCreate = genkitAI.defineFlow(
       } = await googleSearchGroundingData(
         `${question} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
       );
-
       const formatToJSONFromMarkdownAnswerResult =
-        await formatToJSONFromMarkdownAnswer(todosAITextResponseMarkdown);
+        await todoContentFromMarkdown(todosAITextResponseMarkdown);
       const todos: z.infer<typeof TODOSchema>[] = [];
       for (const {
         content,
