@@ -3,7 +3,7 @@
   "scripts": {
     "genkit:start": "genkit start -- tsx --watch src/index.ts",
     "lint": "eslint --ext .js,.ts .",
-    "lint:fix": "eslint --ext .js,.ts . --fix ",
+    "lint:fix": "eslint --ext .js,.ts . --fix",
     "format": "prettier --write .",
     "build": "tsc",
     "build:watch": "tsc --watch",
