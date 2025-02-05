@@ -1,30 +1,23 @@
 import { z } from "genkit";
 import { genkitAI, googleSearchGroundingData } from "../../utils/ai/ai";
 import { Task, TaskSchema } from "../../entity/task";
-import { UserRequestSchema } from "../../entity/userRequest";
 import { TODO, TODOSchema } from "../../entity/todo";
 import { v4 as uuidv4 } from "uuid";
-import { authMiddleware } from "../../middleware/authMiddleware";
 import { database } from "../../utils/firebase/firebase";
 import {
   DataResponseSchema,
   errorResponse,
   ErrorResponseSchema,
 } from "../../entity/response";
-import { ResponseSchema } from "@google/generative-ai";
-import { errorMessage } from "../../utils/error/message";
 import { GroundingDataSchema } from "../../entity/grounding";
+import { TaskCreateSchema } from "./input";
 
-const TaskCreateSchema = z.object({
-  question: z.string(),
-});
-
-const formatToJSONFromMarkdownAnswerSchema = TODOSchema.pick({
+const FormatToJSONFromMarkdownAnswerSchema = TODOSchema.pick({
   content: true,
   supplement: true,
 });
 
-const todoWithGroundingSchema = z.object({
+const TODOWithGroundingSchema = z.object({
   aiTextResponse: z.string(),
   groundings: z.array(GroundingDataSchema),
 });
@@ -33,8 +26,8 @@ const todoWithGrounding = genkitAI.defineTool(
   {
     name: "todoWithGrounding",
     description: "todoWithGrounding",
-    inputSchema: formatToJSONFromMarkdownAnswerSchema,
-    outputSchema: todoWithGroundingSchema,
+    inputSchema: FormatToJSONFromMarkdownAnswerSchema,
+    outputSchema: TODOWithGroundingSchema,
   },
   async (input) => {
     console.log(`#todoWithGrounding: ${JSON.stringify(input, null, 2)}`);
@@ -65,7 +58,7 @@ const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
     name: "formatToJSONFromMarkdownAnswer",
     description: "format to json from markdown answer",
     inputSchema: z.string().describe("answer of question. markdown format"),
-    outputSchema: z.array(formatToJSONFromMarkdownAnswerSchema),
+    outputSchema: z.array(FormatToJSONFromMarkdownAnswerSchema),
   },
   async (input) => {
     console.log(
@@ -73,7 +66,7 @@ const formatToJSONFromMarkdownAnswer = genkitAI.defineTool(
     );
     const response = await genkitAI.generate({
       prompt: `${input} の中からTODOリストを抽出して、要素を一つずつ分けて文字列の配列にしてください`,
-      output: { schema: z.array(formatToJSONFromMarkdownAnswerSchema) },
+      output: { schema: z.array(FormatToJSONFromMarkdownAnswerSchema) },
     });
     const output = response.output;
     if (!output) {
@@ -113,7 +106,7 @@ const generateDefinition = genkitAI.defineTool(
     inputSchema: z.object({
       topic: z.string(),
     }),
-    outputSchema: todoWithGroundingSchema,
+    outputSchema: TODOWithGroundingSchema,
   },
   async (input) => {
     console.log(`#generateDefinition: ${JSON.stringify({ input }, null, 2)}`);
@@ -167,7 +160,7 @@ const generateDefinition = genkitAI.defineTool(
 
 // return json;
 
-const ResponseSchema = z.union([
+export const ResponseSchema = z.union([
   DataResponseSchema.extend({
     data: z.object({
       task: TaskSchema.extend({
@@ -178,14 +171,12 @@ const ResponseSchema = z.union([
   ErrorResponseSchema,
 ]);
 
-module.exports = genkitAI.defineFlow(
+export const taskCreate = genkitAI.defineFlow(
   {
     name: "taskCreate",
-    inputSchema: TaskCreateSchema.extend({
-      userRequest: UserRequestSchema,
-    }),
+    inputSchema: TaskCreateSchema,
     outputSchema: ResponseSchema,
-    middleware: [authMiddleware],
+    // authPolicy: appAuthPolicy("taskCreate"),
   },
   async (input) => {
     console.log(`#taskCreate: ${JSON.stringify({ input }, null, 2)}`);

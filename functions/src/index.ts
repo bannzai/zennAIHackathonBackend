@@ -1,19 +1,36 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * import {onCall} from "firebase-functions/v2/https";
- * import {onDocumentWritten} from "firebase-functions/v2/firestore";
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+/* eslint-disable @typescript-eslint/no-var-requires */
 
-import {onRequest} from "firebase-functions/v2/https";
-import * as logger from "firebase-functions/logger";
+import { initializeApp } from "firebase-admin/app";
 
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
+initializeApp({
+  serviceAccountId:
+    process.env.GOOGLE_APPLICATION_CREDENTIALS_SERVICE_ACCOUNT_ID,
+});
 
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+import { z } from "zod";
+import { genkitAI, googleSearchGroundingData } from "./utils/ai/ai";
+import { appAuthPolicy } from "./utils/ai/authPolicy";
+import { onFlow } from "@genkit-ai/firebase/functions";
+
+export const enqueueTaskCreate =
+  require("./functions/taskCreate/enqueue_task").enqueueTaskCreate;
+export const executeTaskCreate =
+  require("./functions/taskCreate/execute_task").executeTaskCreate;
+
+export const test = onFlow(
+  genkitAI,
+  {
+    name: "askForIngredientsFlow",
+    inputSchema: z.string(),
+    outputSchema: z.string(),
+    authPolicy: appAuthPolicy("askForIngredientsFlow"),
+  },
+  async (question: string) => {
+    const { aiTextResponse } = await googleSearchGroundingData(question);
+
+    if (!aiTextResponse) {
+      throw new Error("Failed to generate ingredients");
+    }
+    return aiTextResponse;
+  }
+);
