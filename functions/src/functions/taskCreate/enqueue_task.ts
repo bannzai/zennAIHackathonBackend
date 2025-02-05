@@ -3,9 +3,9 @@ import { TaskCreateSchema } from "./input";
 import { DataResponseSchema, ErrorResponseSchema } from "../../entity/response";
 import { getFunctions } from "firebase-admin/functions";
 import { getFunctionURL } from "../../utils/firebase/gcp";
-import { authMiddleware } from "../../utils/middleware/authMiddleware";
-import { noAuth, onFlow } from "@genkit-ai/firebase/functions";
+import { onFlow } from "@genkit-ai/firebase/functions";
 import { genkitAI } from "../../utils/ai/ai";
+import { appAuthPolicy } from "../../utils/ai/authPolicy";
 
 const ResponseSchema = z.union([
   DataResponseSchema.extend({
@@ -22,7 +22,7 @@ export const enqueueTaskCreate = onFlow(
     name: "enqueueTaskCreate",
     inputSchema: TaskCreateSchema,
     outputSchema: ResponseSchema,
-    authPolicy: noAuth(),
+    authPolicy: appAuthPolicy("enqueueTaskCreate"),
   },
   async (input) => {
     const queue = getFunctions().taskQueue("executeTaskCreate");
