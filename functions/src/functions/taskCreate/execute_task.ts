@@ -14,6 +14,7 @@ export const executeTaskCreate = onTaskDispatched(
     rateLimits: {
       maxConcurrentDispatches: 6,
     },
+    timeoutSeconds: 10 * 60,
   },
   async (req) => {
     console.log("#executeTaskCreate");
