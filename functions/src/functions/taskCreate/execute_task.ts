@@ -2,6 +2,8 @@ import { z } from "zod";
 import { onTaskDispatched } from "firebase-functions/tasks";
 import { taskCreate } from "./flow";
 import { TaskCreateSchema } from "./input";
+import { error } from "firebase-functions/logger";
+import { errorMessage } from "../../utils/error/message";
 
 export const executeTaskCreate = onTaskDispatched(
   {
@@ -15,9 +17,15 @@ export const executeTaskCreate = onTaskDispatched(
   },
   async (req) => {
     console.log("#executeTaskCreate");
-    const task = req.data as z.infer<typeof TaskCreateSchema>;
-    await taskCreate(task);
-    // TODO: Change state `Task` to `Done`;
-    return;
+    try {
+      const task = req.data as z.infer<typeof TaskCreateSchema>;
+      const response = await taskCreate(task);
+      console.log(response);
+      // TODO: Change state `Task` to `Done`;
+      return;
+    } catch (err) {
+      console.error(errorMessage(err));
+      return;
+    }
   }
 );

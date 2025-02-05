@@ -11,8 +11,6 @@ import {
 } from "../../entity/response";
 import { GroundingDataSchema } from "../../entity/grounding";
 import { TaskCreateSchema } from "./input";
-import { onFlow } from "@genkit-ai/firebase/functions";
-import { appAuthPolicy } from "../../utils/ai/authPolicy";
 
 const FormatToJSONFromMarkdownAnswerSchema = TODOSchema.pick({
   content: true,
@@ -162,7 +160,7 @@ const generateDefinition = genkitAI.defineTool(
 
 // return json;
 
-const ResponseSchema = z.union([
+export const ResponseSchema = z.union([
   DataResponseSchema.extend({
     data: z.object({
       task: TaskSchema.extend({
@@ -173,13 +171,12 @@ const ResponseSchema = z.union([
   ErrorResponseSchema,
 ]);
 
-export const taskCreate = onFlow(
-  genkitAI,
+export const taskCreate = genkitAI.defineFlow(
   {
     name: "taskCreate",
     inputSchema: TaskCreateSchema,
     outputSchema: ResponseSchema,
-    authPolicy: appAuthPolicy("taskCreate"),
+    // authPolicy: appAuthPolicy("taskCreate"),
   },
   async (input) => {
     console.log(`#taskCreate: ${JSON.stringify({ input }, null, 2)}`);
