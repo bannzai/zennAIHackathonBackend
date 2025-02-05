@@ -1,7 +1,8 @@
+import functions from "firebase-functions";
 import { z } from "genkit";
 import { genkitAI, googleSearchGroundingData } from "../../utils/ai/ai";
 import {
-  TaskFullFilled,
+  TaskFullFilledSchema,
   TaskLoadingSchema,
   TaskSchema,
 } from "../../entity/task";
@@ -15,7 +16,6 @@ import {
 } from "../../entity/response";
 import { GroundingDataSchema } from "../../entity/grounding";
 import { TaskCreateSchema } from "./input";
-import { firestoreTimestampJSON } from "../../entity/util/timestamp";
 import { Timestamp } from "firebase-admin/firestore";
 
 const TODOContentFromMarkdownSchema = TODOSchema.pick({
@@ -197,91 +197,149 @@ export const taskCreate = genkitAI.defineFlow(
         taskDocSnapshot.data()
       );
       if (!taskLoadingData.success || taskLoadingData.data == null) {
+        // TaskLoadingのデータが無い場合は処理を続けることができないので、Retryしない
         return errorResponse(
           new Error(`task loading parse error: ${taskLoadingData.error}`)
         );
       }
       const taskLoading = taskLoadingData.data;
 
-      const batch = database.batch();
-      // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
-      const {
-        aiTextResponse: todosAITextResponseMarkdown,
-        groundings: todosGroundings,
-      } = await googleSearchGroundingData(
-        `${question} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
-      );
-      const formatToJSONFromMarkdownAnswerResult =
-        await todoContentFromMarkdown(todosAITextResponseMarkdown);
-      const todos: z.infer<typeof TODOSchema>[] = [];
-      for (const {
-        content,
-        supplement,
-      } of formatToJSONFromMarkdownAnswerResult) {
-        const todoID = uuidv4();
-        const { aiTextResponse, groundings } = await todoWithGrounding({
+      if (
+        taskLoading.todosGroundings == null ||
+        taskLoading.todosGroundings.length === 0 ||
+        taskLoading.todosAITextResponseMarkdown == null
+      ) {
+        const batch = database.batch();
+        // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
+        const {
+          aiTextResponse: todosAITextResponseMarkdown,
+          groundings: todosGroundings,
+        } = await googleSearchGroundingData(
+          `${question} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
+        );
+        const formatToJSONFromMarkdownAnswerResult =
+          await todoContentFromMarkdown(todosAITextResponseMarkdown);
+        const todos: z.infer<typeof TODOSchema>[] = [];
+        for (const {
           content,
           supplement,
-        });
-        const todo: TODO = {
-          id: todoID,
-          userID,
-          taskID,
-          content,
-          supplement,
-          aiTextResponseMarkdown: aiTextResponse,
-          groundings,
-        };
-        todos.push(todo);
+        } of formatToJSONFromMarkdownAnswerResult) {
+          const todoID = uuidv4();
+          const { aiTextResponse, groundings } = await todoWithGrounding({
+            content,
+            supplement,
+          });
+          const todo: TODO = {
+            id: todoID,
+            userID,
+            taskID,
+            content,
+            supplement,
+            aiTextResponseMarkdown: aiTextResponse,
+            groundings,
+          };
+          todos.push(todo);
 
-        const todoDocRef = database
-          .collection(`/users/${userID}/tasks/${taskID}/todos`)
-          .doc(todoID);
-        batch.set(todoDocRef, todo, { merge: true });
+          const todoDocRef = database
+            .collection(`/users/${userID}/tasks/${taskID}/todos`)
+            .doc(todoID);
+          batch.set(todoDocRef, todo, { merge: true });
 
-        console.log(`set todo: ${JSON.stringify({ todo }, null, 2)}`);
+          const updatedTaskSchema = TaskLoadingSchema.pick({
+            todosGroundings: true,
+            todosAITextResponseMarkdown: true,
+            serverUpdatedDateTime: true,
+          });
+          const updatedTask: z.infer<typeof updatedTaskSchema> = {
+            todosGroundings,
+            todosAITextResponseMarkdown,
+            serverUpdatedDateTime: Timestamp.now(),
+          };
+          batch.set(taskDocRef, updatedTask, { merge: true });
+          await batch.commit();
+        }
       }
 
-      const topic = await extractTopic({ question });
-      const {
-        aiTextResponse: definitionAITextResponse,
-        groundings: definitionGroundings,
-      } = await generateDefinition({ topic });
-      const shortAnswerResponse = await genkitAI.generate({
-        prompt: `${question} を短く回答してください`,
+      if (
+        taskLoading.topic == null ||
+        taskLoading.definitionAITextResponse == null ||
+        taskLoading.definitionGroundings == null
+      ) {
+        const topic = await extractTopic({ question });
+        const {
+          aiTextResponse: definitionAITextResponse,
+          groundings: definitionGroundings,
+        } = await generateDefinition({ topic });
+
+        const updatedTaskSchema = TaskLoadingSchema.pick({
+          topic: true,
+          definitionAITextResponse: true,
+          definitionGroundings: true,
+          serverUpdatedDateTime: true,
+        });
+        const updatedTask: z.infer<typeof updatedTaskSchema> = {
+          topic,
+          definitionAITextResponse,
+          definitionGroundings,
+          serverUpdatedDateTime: Timestamp.now(),
+        };
+        database
+          .doc(`/users/${userID}/tasks/${taskID}`)
+          .set(updatedTask, { merge: true });
+      }
+
+      if (taskLoading.shortAnswer == null) {
+        const shortAnswerResponse = await genkitAI.generate({
+          prompt: `${question} を短く回答してください`,
+        });
+        const shortAnswer = shortAnswerResponse.text;
+
+        const updatedTaskSchema = TaskLoadingSchema.pick({
+          shortAnswer: true,
+          serverUpdatedDateTime: true,
+        });
+        const updatedTask: z.infer<typeof updatedTaskSchema> = {
+          shortAnswer,
+          serverUpdatedDateTime: Timestamp.now(),
+        };
+        database
+          .doc(`/users/${userID}/tasks/${taskID}`)
+          .set(updatedTask, { merge: true });
+      }
+
+      const updateTaskSchema = TaskFullFilledSchema.pick({
+        status: true,
+        fullFilledDateTime: true,
+        serverUpdatedDateTime: true,
       });
-      const shortAnswer = shortAnswerResponse.text;
-
-      const task: TaskFullFilled = {
+      const updateTask: z.infer<typeof updateTaskSchema> = {
         status: "fulfilled",
-        id: taskID,
-        userID,
-        question,
-        todosAITextResponseMarkdown,
-        todosGroundings,
-        shortAnswer,
-        topic,
-        definitionAITextResponse,
-        definitionGroundings,
-        completed: false,
-        fullFilledDateTime: firestoreTimestampJSON(Timestamp.now()),
-        serverCreatedDateTime: taskLoading.serverCreatedDateTime,
-        serverUpdatedDateTime: taskLoading.serverUpdatedDateTime,
+        fullFilledDateTime: Timestamp.now(),
+        serverUpdatedDateTime: Timestamp.now(),
       };
-      batch.set(taskDocRef, task, { merge: true });
-      await batch.commit();
 
-      console.log(`set task: ${JSON.stringify({ task }, null, 2)}`);
+      const taskSnapshot = await database
+        .doc(`/users/${userID}/tasks/${taskID}`)
+        .get();
+      const task = TaskFullFilledSchema.safeParse(
+        Object.assign(taskSnapshot.data() ?? {}, { ...updateTask })
+      ).data;
+      if (!task) {
+        // 用意できなかったプロパティがあると判断するのでRetryする
+        functions.logger.info("task not fullfilled", {
+          taskLoading,
+        });
+        throw new Error("task not fullfilled");
+      }
 
       const response: z.infer<typeof ResponseSchema> = {
         result: "OK",
         statusCode: 200,
         data: {
-          task: {
-            ...task,
-          },
+          task,
         },
       };
+      functions.logger.log(`fullfilled: ${JSON.stringify({ task }, null, 2)}`);
 
       return response;
     } catch (error) {
