@@ -12,7 +12,6 @@ import { genkitAI, googleSearchGroundingData } from "./utils/ai/ai";
 import { appAuthPolicy } from "./utils/ai/authPolicy";
 import { onFlow } from "@genkit-ai/firebase/functions";
 
-export const taskCreate = require("./functions/taskCreate/flow").taskCreate;
 export const enqueueTaskCreate =
   require("./functions/taskCreate/enqueue_task").enqueueTaskCreate;
 export const executeTaskCreate =
