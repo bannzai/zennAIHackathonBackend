@@ -3,7 +3,6 @@ import { genkitAI, googleSearchGroundingData } from "../../utils/ai/ai";
 import { Task, TaskSchema } from "../../entity/task";
 import { TODO, TODOSchema } from "../../entity/todo";
 import { v4 as uuidv4 } from "uuid";
-import { authMiddleware } from "../../utils/middleware/authMiddleware";
 import { database } from "../../utils/firebase/firebase";
 import {
   DataResponseSchema,
