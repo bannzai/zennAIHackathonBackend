@@ -2,11 +2,11 @@ import { z } from "zod";
 import { genkitAI, googleSearchGroundingData } from "./utils/ai/ai";
 import { authMiddleware } from "./middleware/authMiddleware";
 
-export const taskCreate = require("./flows/taskCreate/flow").taskCreate;
+export const taskCreate = require("./functions/taskCreate/flow").taskCreate;
 export const enqueueTaskCreate =
-  require("./flows/taskCreate/enqueue_task").enqueueTaskCreate;
+  require("./functions/taskCreate/enqueue_task").enqueueTaskCreate;
 export const executeTaskCreate =
-  require("./flows/taskCreate/execute_task").executeTaskCreate;
+  require("./functions/taskCreate/execute_task").executeTaskCreate;
 
 export const test = genkitAI.defineFlow(
   {
