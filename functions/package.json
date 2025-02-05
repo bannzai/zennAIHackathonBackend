@@ -16,12 +16,18 @@
     "node": "22"
   },
   "dependencies": {
+    "@genkit-ai/ai": "^0.9.12",
+    "@genkit-ai/flow": "^0.5.17",
     "@genkit-ai/firebase": "^0.9.12",
     "@genkit-ai/vertexai": "^0.9.12",
+    "@types/express": "^5.0.0",
     "express": "^4.21.2",
-    "firebase-admin": "^12.6.0",
+    "firebase-admin": "^13.0.2",
     "firebase-functions": "^6.0.1",
-    "genkit": "^0.9.12"
+    "genkit": "^0.9.12",
+    "uuid": "^11.0.5",
+    "zod": "^3.24.1",
+    "zod-to-json-schema": "^3.24.1"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.12.0",
@@ -32,7 +38,7 @@
     "firebase-functions-test": "^3.1.0",
     "genkit-cli": "^0.9.12",
     "tsx": "^4.19.2",
-    "typescript": "^4.9.5"
+    "typescript": "^5.7.3"
   },
   "private": true
 }
