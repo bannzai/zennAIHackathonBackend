@@ -11,7 +11,7 @@ export async function getFunctionURL(name: string): Promise<string> {
   // NOTE: [CloudTask:Region] "asia-northeast1" を使いたいが、なぜか us-central1 じゃないと動かないため明示的に指定する
   const location = "us-central1";
   const url =
-    "https://cloudfunctions.googleapis.com/v2beta/" +
+    "https://cloudfunctions.googleapis.com/v2/" +
     `projects/${projectId}/locations/${location}/functions/${name}`;
 
   functions.logger.log(`Getting function URL for ${name} at ${url}`);
