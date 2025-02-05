@@ -24,3 +24,10 @@ export function firestoreTimestampJSON(
     nanoseconds: timestamp.nanoseconds,
   };
 }
+
+export const ServerTimestampSchema = z.object({
+  serverCreatedDateTime: FirestoreTimestampSchema,
+  serverUpdatedDateTime: FirestoreTimestampSchema,
+});
+
+export type ServerTimestamp = z.infer<typeof ServerTimestampSchema>;
