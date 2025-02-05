@@ -3,7 +3,8 @@
   "scripts": {
     "genkit:start": "genkit start -- tsx --watch src/index.ts",
     "lint": "eslint --ext .js,.ts .",
-    "lint:fix": "eslint --fix --ext .js,.ts .",
+    "lint:fix": "eslint --ext .js,.ts . --fix ",
+    "format": "prettier --write .",
     "build": "tsc",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
