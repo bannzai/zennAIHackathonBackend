@@ -182,11 +182,10 @@ export const taskCreate = genkitAI.defineFlow(
     console.log(`#taskCreate: ${JSON.stringify({ input }, null, 2)}`);
     try {
       const {
+        taskID,
         question,
         userRequest: { userID },
       } = input;
-      const docRef = database.collection(`/users/${userID}/tasks`).doc();
-      const taskID = docRef.id;
       const batch = database.batch();
 
       // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
@@ -250,7 +249,8 @@ export const taskCreate = genkitAI.defineFlow(
         definitionGroundings,
         completed: false,
       };
-      batch.set(docRef, task, { merge: true });
+      const taskDocRef = database.doc(`/users/${userID}/tasks/${taskID}`);
+      batch.set(taskDocRef, task, { merge: true });
       await batch.commit();
 
       console.log(`set task: ${JSON.stringify({ task }, null, 2)}`);

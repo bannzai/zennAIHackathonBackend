@@ -6,6 +6,7 @@ import { getFunctionURL } from "../../utils/firebase/gcp";
 import { onFlow } from "@genkit-ai/firebase/functions";
 import { genkitAI } from "../../utils/ai/ai";
 import { appAuthPolicy } from "../../utils/ai/authPolicy";
+import { database } from "../../utils/firebase/firebase";
 
 const ResponseSchema = z.union([
   DataResponseSchema.extend({
@@ -20,14 +21,23 @@ export const enqueueTaskCreate = onFlow(
   genkitAI,
   {
     name: "enqueueTaskCreate",
-    inputSchema: TaskCreateSchema,
+    inputSchema: TaskCreateSchema.pick({
+      question: true,
+      userRequest: true,
+    }),
     outputSchema: ResponseSchema,
     authPolicy: appAuthPolicy("enqueueTaskCreate"),
   },
   async (input) => {
+    const {
+      userRequest: { userID },
+    } = input;
+    const docRef = database.collection(`/users/${userID}/tasks`).doc();
+    const taskID = docRef.id;
+
     const queue = getFunctions().taskQueue("executeTaskCreate");
     const executeTaskCreateURL = await getFunctionURL("executeTaskCreate");
-    queue.enqueue(input, {
+    queue.enqueue(Object.assign(input, { taskID }), {
       uri: executeTaskCreateURL,
       headers: {
         "Content-Type": "application/json",
@@ -38,7 +48,7 @@ export const enqueueTaskCreate = onFlow(
       result: "OK",
       statusCode: 200,
       data: {
-        taskID: "123",
+        taskID,
       },
     };
 
