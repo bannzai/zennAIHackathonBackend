@@ -11,8 +11,6 @@ import {
   errorResponse,
   ErrorResponseSchema,
 } from "../../entity/response";
-import { ResponseSchema } from "@google/generative-ai";
-import { errorMessage } from "../../utils/error/message";
 import { GroundingDataSchema } from "../../entity/grounding";
 
 const TaskCreateSchema = z.object({
