@@ -181,7 +181,6 @@ export const taskCreate = genkitAI.defineFlow(
     name: "taskCreate",
     inputSchema: TaskCreateSchema,
     outputSchema: ResponseSchema,
-    // authPolicy: appAuthPolicy("taskCreate"),
   },
   async (input) => {
     console.log(`#taskCreate: ${JSON.stringify({ input }, null, 2)}`);
