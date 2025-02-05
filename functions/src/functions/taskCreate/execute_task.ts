@@ -2,7 +2,6 @@ import { z } from "zod";
 import { onTaskDispatched } from "firebase-functions/tasks";
 import { taskCreate } from "./flow";
 import { TaskCreateSchema } from "./input";
-import { UserRequestSchema } from "../../entity/userRequest";
 
 export const executeTaskCreate = onTaskDispatched(
   {
