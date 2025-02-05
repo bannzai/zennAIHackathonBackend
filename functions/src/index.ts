@@ -2,7 +2,9 @@
 
 import { initializeApp } from "firebase-admin/app";
 
-initializeApp();
+initializeApp({
+  serviceAccountId: process.env.SERVICE_ACCOUNT_ID,
+});
 
 import { z } from "zod";
 import { genkitAI, googleSearchGroundingData } from "./utils/ai/ai";
