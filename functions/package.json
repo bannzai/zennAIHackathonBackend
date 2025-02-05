@@ -17,8 +17,8 @@
   },
   "dependencies": {
     "@genkit-ai/ai": "^0.9.12",
-    "@genkit-ai/flow": "^0.5.17",
     "@genkit-ai/firebase": "^0.9.12",
+    "@genkit-ai/flow": "^0.5.17",
     "@genkit-ai/vertexai": "^0.9.12",
     "@google/generative-ai": "^0.21.0",
     "@types/express": "^5.0.0",
@@ -26,6 +26,7 @@
     "firebase-admin": "^13.0.2",
     "firebase-functions": "^6.0.1",
     "genkit": "^0.9.12",
+    "google-auth-library": "^9.15.1",
     "uuid": "^11.0.5",
     "zod": "^3.24.1",
     "zod-to-json-schema": "^3.24.1"
