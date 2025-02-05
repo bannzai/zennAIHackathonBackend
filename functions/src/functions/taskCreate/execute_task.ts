@@ -15,6 +15,7 @@ export const executeTaskCreate = onTaskDispatched(
       maxConcurrentDispatches: 6,
     },
     timeoutSeconds: 10 * 60,
+    memory: "1GiB",
   },
   async (req) => {
     console.log("#executeTaskCreate");
