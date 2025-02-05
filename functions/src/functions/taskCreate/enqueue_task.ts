@@ -1,10 +1,11 @@
 import { z } from "zod";
 import { TaskCreateSchema } from "./input";
-import { genkitAI } from "../../utils/ai/ai";
 import { DataResponseSchema, ErrorResponseSchema } from "../../entity/response";
 import { getFunctions } from "firebase-admin/functions";
 import { getFunctionURL } from "../../utils/firebase/gcp";
-import { authMiddleware } from "../../middleware/authMiddleware";
+import { authMiddleware } from "../../utils/middleware/authMiddleware";
+import { noAuth, onFlow } from "@genkit-ai/firebase/functions";
+import { genkitAI } from "../../utils/ai/ai";
 
 const ResponseSchema = z.union([
   DataResponseSchema.extend({
@@ -15,12 +16,13 @@ const ResponseSchema = z.union([
   ErrorResponseSchema,
 ]);
 
-export const enqueueTaskCreate = genkitAI.defineFlow(
+export const enqueueTaskCreate = onFlow(
+  genkitAI,
   {
     name: "enqueueTaskCreate",
     inputSchema: TaskCreateSchema,
     outputSchema: ResponseSchema,
-    middleware: [authMiddleware],
+    authPolicy: noAuth(),
   },
   async (input) => {
     const queue = getFunctions().taskQueue("executeTaskCreate");

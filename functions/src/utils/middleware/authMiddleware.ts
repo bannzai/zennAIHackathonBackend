@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import admin from "firebase-admin";
-import { auth } from "../utils/firebase/firebase";
+import { auth } from "../firebase/firebase";
 
 interface AuthRequest extends Request {
   userID?: string;

@@ -6,7 +6,7 @@ initializeApp();
 
 import { z } from "zod";
 import { genkitAI, googleSearchGroundingData } from "./utils/ai/ai";
-import { authMiddleware } from "./middleware/authMiddleware";
+import { authMiddleware } from "./utils/middleware/authMiddleware";
 
 export const taskCreate = require("./functions/taskCreate/flow").taskCreate;
 export const enqueueTaskCreate =
