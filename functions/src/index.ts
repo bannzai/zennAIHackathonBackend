@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
+
 import { z } from "zod";
 import { genkitAI, googleSearchGroundingData } from "./utils/ai/ai";
 import { authMiddleware } from "./middleware/authMiddleware";
@@ -16,9 +18,7 @@ export const test = genkitAI.defineFlow(
     middleware: [authMiddleware],
   },
   async (question: string) => {
-    const { aiTextResponse, groundings } = await googleSearchGroundingData(
-      question
-    );
+    const { aiTextResponse } = await googleSearchGroundingData(question);
 
     if (!aiTextResponse) {
       throw new Error("Failed to generate ingredients");

@@ -1,13 +1,11 @@
 import { genkit, z } from "genkit";
 import { vertexAI } from "@genkit-ai/vertexai";
-import { gemini15Pro, gemini20FlashExp } from "@genkit-ai/vertexai";
+import { gemini15Pro } from "@genkit-ai/vertexai";
 import {
-  GenerateContentCandidate,
   GenerateContentResult,
   GenerativeModel,
   GoogleGenerativeAI,
   GroundingChunk,
-  SchemaType,
   Tool,
 } from "@google/generative-ai";
 import { GroundingData, GroundingDataSchema } from "../../entity/grounding";
@@ -21,6 +19,7 @@ export const genkitAI = genkit({
 });
 
 export const googleGenerativeAI = new GoogleGenerativeAI(
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   process.env.GEMINI_API_KEY!
 );
 
