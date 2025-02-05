@@ -20,6 +20,7 @@
     "@genkit-ai/flow": "^0.5.17",
     "@genkit-ai/firebase": "^0.9.12",
     "@genkit-ai/vertexai": "^0.9.12",
+    "@google/generative-ai": "^0.21.0",
     "@types/express": "^5.0.0",
     "express": "^4.21.2",
     "firebase-admin": "^13.0.2",
