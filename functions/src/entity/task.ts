@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { GroundingDataSchema } from "./grounding";
 
-export const TaskSchema = z.object({
+export const TaskFullFilledSchema = z.object({
+  status: z.literal("fulfilled"),
   id: z.string(),
   userID: z.string(),
   // 質問の内容
@@ -21,4 +22,20 @@ export const TaskSchema = z.object({
   completed: z.boolean().default(false),
 });
 
+export const TaskLoadingSchema = TaskFullFilledSchema.partial()
+  .required({
+    id: true,
+    userID: true,
+    question: true,
+    completed: true,
+  })
+  .merge(
+    z.object({
+      status: z.literal("loading"),
+    })
+  );
+export const TaskSchema = z.union([TaskFullFilledSchema, TaskLoadingSchema]);
+
 export type Task = z.infer<typeof TaskSchema>;
+export type TaskFullFilled = z.infer<typeof TaskFullFilledSchema>;
+export type TaskLoading = z.infer<typeof TaskLoadingSchema>;
