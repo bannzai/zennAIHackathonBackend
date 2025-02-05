@@ -3,6 +3,10 @@ import { genkitAI, googleSearchGroundingData } from "./utils/ai/ai";
 import { authMiddleware } from "./middleware/authMiddleware";
 
 export const taskCreate = require("./flows/taskCreate/flow").taskCreate;
+export const enqueueTaskCreate =
+  require("./flows/taskCreate/enqueue_task").enqueueTaskCreate;
+export const executeTaskCreate =
+  require("./flows/taskCreate/execute_task").executeTaskCreate;
 
 export const test = genkitAI.defineFlow(
   {
@@ -24,4 +28,6 @@ export const test = genkitAI.defineFlow(
 );
 
 // NOTE: default port number is 3400
-genkitAI.startFlowServer({ flows: [taskCreate] });
+genkitAI.startFlowServer({
+  flows: [taskCreate, enqueueTaskCreate, executeTaskCreate],
+});
