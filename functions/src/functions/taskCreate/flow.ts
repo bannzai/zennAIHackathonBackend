@@ -230,7 +230,7 @@ export const taskCreate = genkitAI.defineFlow(
 
       if (taskLoading.shortAnswer == null) {
         const shortAnswerResponse = await genkitAI.generate({
-          prompt: `${question} を短く回答してください`,
+          prompt: `「${question}」 を短く回答してください`,
         });
         const shortAnswer = shortAnswerResponse.text;
 
@@ -258,7 +258,7 @@ export const taskCreate = genkitAI.defineFlow(
           aiTextResponse: todosAITextResponseMarkdown,
           groundings: todosGroundings,
         } = await googleSearchGroundingData(
-          `${question} を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
+          `「${question}」 を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
         );
         const formatToJSONFromMarkdownAnswerResult =
           await todoContentFromMarkdown(todosAITextResponseMarkdown);
