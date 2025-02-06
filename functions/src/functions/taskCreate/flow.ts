@@ -223,13 +223,15 @@ export const taskCreate = genkitAI.defineFlow(
           content,
           supplement,
         } of formatToJSONFromMarkdownAnswerResult) {
-          const todoID = uuidv4();
+          const todoDocRef = database
+            .collection(`/users/${userID}/tasks/${taskID}/todos`)
+            .doc();
           const { aiTextResponse, groundings } = await todoWithGrounding({
             content,
             supplement,
           });
           const todo: TODO = {
-            id: todoID,
+            id: todoDocRef.id,
             userID,
             taskID,
             content,
@@ -239,9 +241,6 @@ export const taskCreate = genkitAI.defineFlow(
           };
           todos.push(todo);
 
-          const todoDocRef = database
-            .collection(`/users/${userID}/tasks/${taskID}/todos`)
-            .doc(todoID);
           batch.set(todoDocRef, todo, { merge: true });
         }
 
