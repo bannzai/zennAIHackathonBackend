@@ -307,11 +307,13 @@ export const taskCreate = genkitAI.defineFlow(
       const updateTaskSchema = TaskPreparedSchema.pick({
         status: true,
         fullFilledDateTime: true,
+        completed: true,
         serverUpdatedDateTime: true,
       });
       const updateTask: z.infer<typeof updateTaskSchema> = {
         status: "prepared",
         fullFilledDateTime: Timestamp.now(),
+        completed: false,
         serverUpdatedDateTime: Timestamp.now(),
       };
 

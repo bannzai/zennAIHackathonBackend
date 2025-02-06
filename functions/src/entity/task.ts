@@ -24,7 +24,7 @@ export const TaskPreparedSchema = z
     definitionAITextResponse: z.string(),
     // TODOのAIの回答のソースとなったもの
     definitionGroundings: z.array(GroundingDataSchema),
-    completed: z.boolean().default(false),
+    completed: z.boolean(),
 
     fullFilledDateTime: FirestoreTimestampSchema,
   })
