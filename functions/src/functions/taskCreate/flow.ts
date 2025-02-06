@@ -331,6 +331,10 @@ export const taskCreate = genkitAI.defineFlow(
         throw new Error("task not fullfilled");
       }
 
+      await database
+        .doc(`/users/${userID}/tasks/${taskID}`)
+        .set(task, { merge: true });
+
       const response: z.infer<typeof ResponseSchema> = {
         result: "OK",
         statusCode: 200,
