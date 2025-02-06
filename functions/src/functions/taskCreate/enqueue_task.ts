@@ -7,7 +7,7 @@ import { onFlow } from "@genkit-ai/firebase/functions";
 import { genkitAI } from "../../utils/ai/ai";
 import { appAuthPolicy } from "../../utils/ai/authPolicy";
 import { database } from "../../utils/firebase/firebase";
-import { TaskLoading } from "../../entity/task";
+import { TaskPreparing } from "../../entity/task";
 import { firestoreTimestampJSON } from "../../entity/util/timestamp";
 import { Timestamp } from "firebase-admin/firestore";
 
@@ -37,8 +37,8 @@ export const enqueueTaskCreate = onFlow(
     } = input;
     const docRef = database.collection(`/users/${userID}/tasks`).doc();
     const taskID = docRef.id;
-    const taskLoading: TaskLoading = {
-      status: "loading",
+    const taskLoading: TaskPreparing = {
+      status: "preparing",
       id: taskID,
       userID,
       question: input.question,

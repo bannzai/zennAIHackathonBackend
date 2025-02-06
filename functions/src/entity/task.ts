@@ -7,7 +7,7 @@ import {
 
 export const TaskFullFilledSchema = z
   .object({
-    status: z.literal("fulfilled"),
+    status: z.literal("prepared"),
     id: z.string(),
     userID: z.string(),
     // 質問の内容
@@ -44,11 +44,11 @@ export const TaskLoadingSchema = TaskFullFilledSchema.partial()
   })
   .merge(
     z.object({
-      status: z.literal("loading"),
+      status: z.literal("preparing"),
     })
   );
 export const TaskSchema = z.union([TaskFullFilledSchema, TaskLoadingSchema]);
 
 export type Task = z.infer<typeof TaskSchema>;
-export type TaskFullFilled = z.infer<typeof TaskFullFilledSchema>;
-export type TaskLoading = z.infer<typeof TaskLoadingSchema>;
+export type TaskPrepared = z.infer<typeof TaskFullFilledSchema>;
+export type TaskPreparing = z.infer<typeof TaskLoadingSchema>;
