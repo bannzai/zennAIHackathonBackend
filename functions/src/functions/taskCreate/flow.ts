@@ -2,8 +2,8 @@ import functions from "firebase-functions";
 import { z } from "genkit";
 import { genkitAI, googleSearchGroundingData } from "../../utils/ai/ai";
 import {
-  TaskFullFilledSchema,
-  TaskLoadingSchema,
+  TaskPreparedSchema,
+  TaskPreparingSchema,
   TaskSchema,
 } from "../../entity/task";
 import { TODO, TODOSchema } from "../../entity/todo";
@@ -192,11 +192,11 @@ export const taskCreate = genkitAI.defineFlow(
       } = input;
       const taskDocRef = database.doc(`/users/${userID}/tasks/${taskID}`);
       const taskDocSnapshot = await taskDocRef.get();
-      const taskLoadingData = TaskLoadingSchema.safeParse(
+      const taskLoadingData = TaskPreparingSchema.safeParse(
         taskDocSnapshot.data()
       );
       if (!taskLoadingData.success || taskLoadingData.data == null) {
-        // TaskLoadingのデータが無い場合は処理を続けることができないので、Retryしない
+        // TaskPreparingのデータが無い場合は処理を続けることができないので、Retryしない
         return errorResponse(
           new Error(`task loading parse error: ${taskLoadingData.error}`)
         );
@@ -244,7 +244,7 @@ export const taskCreate = genkitAI.defineFlow(
             .doc(todoID);
           batch.set(todoDocRef, todo, { merge: true });
 
-          const updatedTaskSchema = TaskLoadingSchema.pick({
+          const updatedTaskSchema = TaskPreparingSchema.pick({
             todosGroundings: true,
             todosAITextResponseMarkdown: true,
             serverUpdatedDateTime: true,
@@ -270,7 +270,7 @@ export const taskCreate = genkitAI.defineFlow(
           groundings: definitionGroundings,
         } = await generateDefinition({ topic });
 
-        const updatedTaskSchema = TaskLoadingSchema.pick({
+        const updatedTaskSchema = TaskPreparingSchema.pick({
           topic: true,
           definitionAITextResponse: true,
           definitionGroundings: true,
@@ -293,7 +293,7 @@ export const taskCreate = genkitAI.defineFlow(
         });
         const shortAnswer = shortAnswerResponse.text;
 
-        const updatedTaskSchema = TaskLoadingSchema.pick({
+        const updatedTaskSchema = TaskPreparingSchema.pick({
           shortAnswer: true,
           serverUpdatedDateTime: true,
         });
@@ -306,7 +306,7 @@ export const taskCreate = genkitAI.defineFlow(
           .set(updatedTask, { merge: true });
       }
 
-      const updateTaskSchema = TaskFullFilledSchema.pick({
+      const updateTaskSchema = TaskPreparedSchema.pick({
         status: true,
         fullFilledDateTime: true,
         serverUpdatedDateTime: true,
@@ -320,7 +320,7 @@ export const taskCreate = genkitAI.defineFlow(
       const taskSnapshot = await database
         .doc(`/users/${userID}/tasks/${taskID}`)
         .get();
-      const task = TaskFullFilledSchema.safeParse(
+      const task = TaskPreparedSchema.safeParse(
         Object.assign(taskSnapshot.data() ?? {}, { ...updateTask })
       ).data;
       if (!task) {

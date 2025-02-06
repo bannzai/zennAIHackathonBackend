@@ -5,7 +5,7 @@ import {
   ServerTimestampSchema,
 } from "./util/timestamp";
 
-export const TaskFullFilledSchema = z
+export const TaskPreparedSchema = z
   .object({
     status: z.literal("prepared"),
     id: z.string(),
@@ -30,7 +30,7 @@ export const TaskFullFilledSchema = z
   })
   .merge(ServerTimestampSchema);
 
-export const TaskLoadingSchema = TaskFullFilledSchema.partial()
+export const TaskPreparingSchema = TaskPreparedSchema.partial()
   .required({
     id: true,
     userID: true,
@@ -47,8 +47,8 @@ export const TaskLoadingSchema = TaskFullFilledSchema.partial()
       status: z.literal("preparing"),
     })
   );
-export const TaskSchema = z.union([TaskFullFilledSchema, TaskLoadingSchema]);
+export const TaskSchema = z.union([TaskPreparedSchema, TaskPreparingSchema]);
 
 export type Task = z.infer<typeof TaskSchema>;
-export type TaskPrepared = z.infer<typeof TaskFullFilledSchema>;
-export type TaskPreparing = z.infer<typeof TaskLoadingSchema>;
+export type TaskPrepared = z.infer<typeof TaskPreparedSchema>;
+export type TaskPreparing = z.infer<typeof TaskPreparingSchema>;
