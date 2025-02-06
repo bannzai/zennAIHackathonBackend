@@ -8,7 +8,6 @@ import { genkitAI } from "../../utils/ai/ai";
 import { appAuthPolicy } from "../../utils/ai/authPolicy";
 import { database } from "../../utils/firebase/firebase";
 import { TaskPreparing } from "../../entity/task";
-import { firestoreTimestampJSON } from "../../entity/util/timestamp";
 import { Timestamp } from "firebase-admin/firestore";
 
 const ResponseSchema = z.union([
@@ -42,8 +41,8 @@ export const enqueueTaskCreate = onFlow(
       id: taskID,
       userID,
       question: input.question,
-      serverCreatedDateTime: firestoreTimestampJSON(Timestamp.now()),
-      serverUpdatedDateTime: firestoreTimestampJSON(Timestamp.now()),
+      serverCreatedDateTime: Timestamp.now(),
+      serverUpdatedDateTime: Timestamp.now(),
     };
     database.doc(`/users/${userID}/tasks/${taskID}`).set(taskLoading);
 
