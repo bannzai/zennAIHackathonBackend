@@ -7,7 +7,6 @@ import {
   TaskSchema,
 } from "../../entity/task";
 import { TODO, TODOSchema } from "../../entity/todo";
-import { v4 as uuidv4 } from "uuid";
 import { database } from "../../utils/firebase/firebase";
 import {
   DataResponseSchema,
@@ -238,6 +237,8 @@ export const taskCreate = genkitAI.defineFlow(
             supplement,
             aiTextResponseMarkdown: aiTextResponse,
             groundings,
+            serverCreatedDateTime: Timestamp.now(),
+            serverUpdatedDateTime: Timestamp.now(),
           };
           todos.push(todo);
 
