@@ -16,6 +16,7 @@ import {
 import { GroundingDataSchema } from "../../entity/grounding";
 import { TaskCreateSchema } from "./input";
 import { Timestamp } from "firebase-admin/firestore";
+import { zodTypeGuard } from "../../utils/stdlib/type_guard";
 
 const TODOContentFromMarkdownSchema = TODOSchema.pick({
   content: true,
@@ -191,16 +192,13 @@ export const taskCreate = genkitAI.defineFlow(
       } = input;
       const taskDocRef = database.doc(`/users/${userID}/tasks/${taskID}`);
       const taskDocSnapshot = await taskDocRef.get();
-      const taskLoadingData = TaskPreparingSchema.safeParse(
-        taskDocSnapshot.data()
-      );
-      if (!taskLoadingData.success || taskLoadingData.data == null) {
+      const taskLoading = taskDocSnapshot.data();
+      if (!zodTypeGuard(TaskPreparingSchema, taskLoading)) {
         // TaskPreparingのデータが無い場合は処理を続けることができないので、Retryしない
         return errorResponse(
-          new Error(`task loading parse error: ${taskLoadingData.error}`)
+          new Error(`task loading parse error. taskLoading: ${taskLoading}`)
         );
       }
-      const taskLoading = taskLoadingData.data;
 
       if (
         taskLoading.topic == null ||
@@ -320,11 +318,11 @@ export const taskCreate = genkitAI.defineFlow(
       const taskSnapshot = await database
         .doc(`/users/${userID}/tasks/${taskID}`)
         .get();
-      const task = TaskPreparedSchema.safeParse({
+      const task = {
         ...(taskSnapshot.data() ?? {}),
         ...updateTask,
-      }).data;
-      if (!task) {
+      };
+      if (!zodTypeGuard(TaskPreparedSchema, task)) {
         // 用意できなかったプロパティがあると判断するのでRetryする
         functions.logger.info("task not fullfilled", {
           taskLoading,
