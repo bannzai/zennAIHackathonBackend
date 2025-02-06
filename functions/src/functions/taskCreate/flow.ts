@@ -1,4 +1,4 @@
-import functions from "firebase-functions";
+import * as functions from "firebase-functions";
 import { z } from "genkit";
 import { genkitAI, googleSearchGroundingData } from "../../utils/ai/ai";
 import {

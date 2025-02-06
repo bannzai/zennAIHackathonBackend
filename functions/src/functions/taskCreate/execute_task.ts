@@ -1,4 +1,4 @@
-import functions from "firebase-functions";
+import * as functions from "firebase-functions";
 import { z } from "zod";
 import { onTaskDispatched } from "firebase-functions/tasks";
 import { taskCreate } from "./flow";
