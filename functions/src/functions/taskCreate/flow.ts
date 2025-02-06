@@ -243,20 +243,20 @@ export const taskCreate = genkitAI.defineFlow(
             .collection(`/users/${userID}/tasks/${taskID}/todos`)
             .doc(todoID);
           batch.set(todoDocRef, todo, { merge: true });
-
-          const updatedTaskSchema = TaskPreparingSchema.pick({
-            todosGroundings: true,
-            todosAITextResponseMarkdown: true,
-            serverUpdatedDateTime: true,
-          });
-          const updatedTask: z.infer<typeof updatedTaskSchema> = {
-            todosGroundings,
-            todosAITextResponseMarkdown,
-            serverUpdatedDateTime: Timestamp.now(),
-          };
-          batch.set(taskDocRef, updatedTask, { merge: true });
-          await batch.commit();
         }
+
+        const updatedTaskSchema = TaskPreparingSchema.pick({
+          todosGroundings: true,
+          todosAITextResponseMarkdown: true,
+          serverUpdatedDateTime: true,
+        });
+        const updatedTask: z.infer<typeof updatedTaskSchema> = {
+          todosGroundings,
+          todosAITextResponseMarkdown,
+          serverUpdatedDateTime: Timestamp.now(),
+        };
+        batch.set(taskDocRef, updatedTask, { merge: true });
+        await batch.commit();
       }
 
       if (
