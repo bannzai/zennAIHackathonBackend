@@ -203,6 +203,53 @@ export const taskCreate = genkitAI.defineFlow(
       const taskLoading = taskLoadingData.data;
 
       if (
+        taskLoading.topic == null ||
+        taskLoading.definitionAITextResponse == null ||
+        taskLoading.definitionGroundings == null
+      ) {
+        const topic = await extractTopic({ question });
+        const {
+          aiTextResponse: definitionAITextResponse,
+          groundings: definitionGroundings,
+        } = await generateDefinition({ topic });
+
+        const updatedTaskSchema = TaskPreparingSchema.pick({
+          topic: true,
+          definitionAITextResponse: true,
+          definitionGroundings: true,
+          serverUpdatedDateTime: true,
+        });
+        const updatedTask: z.infer<typeof updatedTaskSchema> = {
+          topic,
+          definitionAITextResponse,
+          definitionGroundings,
+          serverUpdatedDateTime: Timestamp.now(),
+        };
+        database
+          .doc(`/users/${userID}/tasks/${taskID}`)
+          .set(updatedTask, { merge: true });
+      }
+
+      if (taskLoading.shortAnswer == null) {
+        const shortAnswerResponse = await genkitAI.generate({
+          prompt: `${question} を短く回答してください`,
+        });
+        const shortAnswer = shortAnswerResponse.text;
+
+        const updatedTaskSchema = TaskPreparingSchema.pick({
+          shortAnswer: true,
+          serverUpdatedDateTime: true,
+        });
+        const updatedTask: z.infer<typeof updatedTaskSchema> = {
+          shortAnswer,
+          serverUpdatedDateTime: Timestamp.now(),
+        };
+        database
+          .doc(`/users/${userID}/tasks/${taskID}`)
+          .set(updatedTask, { merge: true });
+      }
+
+      if (
         taskLoading.todosGroundings == null ||
         taskLoading.todosGroundings.length === 0 ||
         taskLoading.todosAITextResponseMarkdown == null
@@ -257,53 +304,6 @@ export const taskCreate = genkitAI.defineFlow(
         };
         batch.set(taskDocRef, updatedTask, { merge: true });
         await batch.commit();
-      }
-
-      if (
-        taskLoading.topic == null ||
-        taskLoading.definitionAITextResponse == null ||
-        taskLoading.definitionGroundings == null
-      ) {
-        const topic = await extractTopic({ question });
-        const {
-          aiTextResponse: definitionAITextResponse,
-          groundings: definitionGroundings,
-        } = await generateDefinition({ topic });
-
-        const updatedTaskSchema = TaskPreparingSchema.pick({
-          topic: true,
-          definitionAITextResponse: true,
-          definitionGroundings: true,
-          serverUpdatedDateTime: true,
-        });
-        const updatedTask: z.infer<typeof updatedTaskSchema> = {
-          topic,
-          definitionAITextResponse,
-          definitionGroundings,
-          serverUpdatedDateTime: Timestamp.now(),
-        };
-        database
-          .doc(`/users/${userID}/tasks/${taskID}`)
-          .set(updatedTask, { merge: true });
-      }
-
-      if (taskLoading.shortAnswer == null) {
-        const shortAnswerResponse = await genkitAI.generate({
-          prompt: `${question} を短く回答してください`,
-        });
-        const shortAnswer = shortAnswerResponse.text;
-
-        const updatedTaskSchema = TaskPreparingSchema.pick({
-          shortAnswer: true,
-          serverUpdatedDateTime: true,
-        });
-        const updatedTask: z.infer<typeof updatedTaskSchema> = {
-          shortAnswer,
-          serverUpdatedDateTime: Timestamp.now(),
-        };
-        database
-          .doc(`/users/${userID}/tasks/${taskID}`)
-          .set(updatedTask, { merge: true });
       }
 
       const updateTaskSchema = TaskPreparedSchema.pick({
