@@ -320,9 +320,10 @@ export const taskCreate = genkitAI.defineFlow(
       const taskSnapshot = await database
         .doc(`/users/${userID}/tasks/${taskID}`)
         .get();
-      const task = TaskPreparedSchema.safeParse(
-        Object.assign(taskSnapshot.data() ?? {}, { ...updateTask })
-      ).data;
+      const task = TaskPreparedSchema.safeParse({
+        ...(taskSnapshot.data() ?? {}),
+        ...updateTask,
+      }).data;
       if (!task) {
         // 用意できなかったプロパティがあると判断するのでRetryする
         functions.logger.info("task not fullfilled", {
