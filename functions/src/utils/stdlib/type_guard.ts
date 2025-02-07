@@ -5,12 +5,12 @@ import type z from "zod";
 // export const TaskPreparedSchema = z
 //   .object({
 //     status: z.literal("prepared"),
-//     fullFilledDateTime: FirestoreTimestampSchema,
+//     preparedDateTime: FirestoreTimestampSchema,
 //   })
 // .....
 //   const updateTask: z.infer<typeof updateTaskSchema> = {
 //     status: "prepared",
-//     fullFilledDateTime: Timestamp.now(),
+//     preparedDateTime: Timestamp.now(),
 //     serverUpdatedDateTime: Timestamp.now(),
 //   };
 

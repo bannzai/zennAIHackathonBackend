@@ -26,7 +26,7 @@ export const TaskPreparedSchema = z
     definitionGroundings: z.array(GroundingDataSchema),
     completed: z.boolean(),
 
-    fullFilledDateTime: FirestoreTimestampSchema,
+    preparedDateTime: FirestoreTimestampSchema,
   })
   .merge(ServerTimestampSchema);
 
@@ -39,7 +39,7 @@ export const TaskPreparingSchema = TaskPreparedSchema.partial()
     serverUpdatedDateTime: true,
   })
   .omit({
-    fullFilledDateTime: true,
+    preparedDateTime: true,
     completed: true,
   })
   .merge(
