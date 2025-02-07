@@ -95,7 +95,7 @@ export async function googleSearchGroundingData(
   }
   if (
     googleSearchGroundingData20FlashExp_1Result &&
-    groundingIsPerfect(googleSearchGroundingData20FlashExp_1Result)
+    groundingHasTitleAndURL(googleSearchGroundingData20FlashExp_1Result)
   ) {
     return googleSearchGroundingData20FlashExp_1Result;
   }
@@ -117,7 +117,7 @@ export async function googleSearchGroundingData(
   }
   if (
     googleSearchGroundingData20FlashExp_2Result &&
-    groundingIsPerfect(googleSearchGroundingData20FlashExp_2Result)
+    groundingHasTitleAndURL(googleSearchGroundingData20FlashExp_2Result)
   ) {
     return googleSearchGroundingData20FlashExp_2Result;
   }
@@ -136,7 +136,7 @@ export async function googleSearchGroundingData(
   }
   if (
     googleSearchGroundingData15FlashResult_1 &&
-    groundingIsPerfect(googleSearchGroundingData15FlashResult_1)
+    groundingHasTitleAndURL(googleSearchGroundingData15FlashResult_1)
   ) {
     return googleSearchGroundingData15FlashResult_1;
   }
@@ -158,7 +158,7 @@ export async function googleSearchGroundingData(
   }
   if (
     googleSearchGroundingData15FlashResult_2 &&
-    groundingIsPerfect(googleSearchGroundingData15FlashResult_2)
+    groundingHasTitleAndURL(googleSearchGroundingData15FlashResult_2)
   ) {
     return googleSearchGroundingData15FlashResult_2;
   }
@@ -207,14 +207,14 @@ function transformGroundingData(result: GenerateContentResult): {
   return { aiTextResponse: response?.text() ?? "", groundings };
 }
 
-function groundingIsPerfect(grounding: Grounding): boolean {
-  let hasInvalidGrounding = false;
+function groundingHasTitleAndURL(grounding: Grounding): boolean {
+  let hasTitleAndURL = false;
   for (const _grounding of grounding.groundings) {
-    if (!_grounding.title || !_grounding.url) {
-      hasInvalidGrounding = true;
+    if (_grounding.title && _grounding.url) {
+      hasTitleAndURL = true;
     }
   }
-  return !hasInvalidGrounding;
+  return hasTitleAndURL;
 }
 
 function groundingScore(grounding: Grounding): number {
