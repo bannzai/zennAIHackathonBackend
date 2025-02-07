@@ -12,7 +12,8 @@ import { GroundingDataSchema } from "../../entity/grounding";
 import { zodTypeGuard } from "../../utils/stdlib/type_guard";
 import { TODOPrepareSchema } from "../todoPrepare/input";
 import { FillLocationSchema } from "./input";
-import { nullable } from "../../utils/stdlib/nullable";
+import { nonNullable, nullable } from "../../utils/stdlib/nullable";
+import { TaskPreparedSchema, TaskSchema } from "../../entity/task";
 
 export const ResponseSchema = z.union([
   DataResponseSchema.extend({
@@ -101,9 +102,53 @@ export const fillLocation = genkitAI.defineFlow(
         userRequest: { userID },
       } = input;
 
-      const todoDocRef = database
-        .collection(`/users/${userID}/tasks/${taskID}/todos`)
-        .doc(todoID);
+      const taskDocRef = database
+        .collection(`/users/${userID}/tasks`)
+        .doc(taskID);
+      const taskSnapshot = await taskDocRef.get();
+      const task = taskSnapshot.data();
+      if (!zodTypeGuard(TaskPreparedSchema, task)) {
+        return errorResponse(
+          new Error(`task loading parse error. taskLoading: ${task}`)
+        );
+      }
+
+      const todosCollectionRef = database.collection(
+        `/users/${userID}/tasks/${taskID}/todos`
+      );
+      const todoDocRefs = await todosCollectionRef.listDocuments();
+      const todoPromises = await Promise.allSettled(
+        todoDocRefs.map(async (todoDocRef) => {
+          const todoSnapshot = await todoDocRef.get();
+          const todo = todoSnapshot.data();
+          if (!zodTypeGuard(TODOSchema, todo)) {
+            // 変換できなかったものに関してはスルーする。位置情報等が埋まらないだけ
+            return null;
+          }
+          return todo;
+        })
+      );
+      const todos = todoPromises
+        .map((todoPromise) =>
+          todoPromise.status === "fulfilled" ? todoPromise.value : null
+        )
+        .filter(nonNullable);
+
+      for (const todo of todos) {
+        const {
+          aiTextResponse,
+          groundings,
+          locationName,
+          address,
+          email,
+          tel,
+        } = await todoLocation({
+          todo,
+          taskQuestion: task.question,
+          userLocation,
+        });
+      }
+
       const todoSnapshot = await todoDocRef.get();
       const todo = todoSnapshot.data();
       if (!zodTypeGuard(TODOSchema, todo)) {
