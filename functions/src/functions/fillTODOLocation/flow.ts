@@ -27,10 +27,10 @@ export const ResponseSchema = z.union([
 const TODOLocationSchema = z.object({
   aiTextResponse: z.string(),
   groundings: z.array(GroundingDataSchema),
-  locationName: z.string().nullish(),
-  address: z.string().nullish(),
-  email: z.string().nullish(),
-  tel: z.string().nullish(),
+  locationName: z.string().nullable(),
+  address: z.string().nullable(),
+  email: z.string().nullable(),
+  tel: z.string().nullable(),
 });
 
 const todoLocation = genkitAI.defineTool(
@@ -79,9 +79,13 @@ const todoLocation = genkitAI.defineTool(
         schema: todoLocationRAGSchema,
       },
     });
+    const output = todoLocationRAGResponse?.output;
 
     const response: z.infer<typeof TODOLocationSchema> = {
-      ...todoLocationRAGResponse,
+      locationName: output?.locationName ?? null,
+      address: output?.address ?? null,
+      email: output?.email ?? null,
+      tel: output?.tel ?? null,
       aiTextResponse,
       groundings,
     };
