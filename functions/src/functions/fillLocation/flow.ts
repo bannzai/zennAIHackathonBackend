@@ -7,18 +7,18 @@ import {
   errorResponse,
   ErrorResponseSchema,
 } from "../../entity/response";
-import { Timestamp } from "firebase-admin/firestore";
 import { GroundingDataSchema } from "../../entity/grounding";
 import { zodTypeGuard } from "../../utils/stdlib/type_guard";
-import { TODOPrepareSchema } from "../todoPrepare/input";
 import { FillLocationSchema } from "./input";
-import { nonNullable, nullable } from "../../utils/stdlib/nullable";
-import { TaskPreparedSchema, TaskSchema } from "../../entity/task";
+import { nonNullable } from "../../utils/stdlib/nullable";
+import { TaskPreparedSchema } from "../../entity/task";
+import { onFlow } from "@genkit-ai/firebase/functions";
+import { appAuthPolicy } from "../../utils/ai/authPolicy";
 
 export const ResponseSchema = z.union([
   DataResponseSchema.extend({
     data: z.object({
-      todo: TODOSchema,
+      result: z.literal("OK"),
     }),
   }),
   ErrorResponseSchema,
@@ -87,11 +87,13 @@ const todoLocation = genkitAI.defineTool(
 );
 
 // このflowはCloud Taskから使用されるのでエラーハンドリングは慎重に
-export const fillLocation = genkitAI.defineFlow(
+export const fillLocation = onFlow(
+  genkitAI,
   {
     name: "fillLocation",
     inputSchema: FillLocationSchema,
     outputSchema: ResponseSchema,
+    authPolicy: appAuthPolicy("fillLocation"),
   },
   async (input) => {
     console.log(`#fillLocation: ${JSON.stringify({ input }, null, 2)}`);
@@ -147,43 +149,31 @@ export const fillLocation = genkitAI.defineFlow(
           taskQuestion: task.question,
           userLocation,
         });
-      }
 
-      const todoSnapshot = await todoDocRef.get();
-      const todo = todoSnapshot.data();
-      if (!zodTypeGuard(TODOSchema, todo)) {
-        return errorResponse(
-          new Error(`todo loading parse error. todoLoading: ${todo}`)
-        );
+        await database
+          .collection(`/users/${userID}/tasks/${taskID}/todos`)
+          .doc(todo.id)
+          .set(
+            {
+              ...todo,
+              location: {
+                aiTextResponse,
+                groundings,
+                name: locationName,
+                address,
+                email,
+                tel,
+              },
+            },
+            { merge: true }
+          );
       }
-      if (todo.groundings != null && todo.aiTextResponseMarkdown != null) {
-        const response: z.infer<typeof ResponseSchema> = {
-          result: "OK",
-          statusCode: 200,
-          data: { todo },
-        };
-        return response;
-      }
-
-      const { aiTextResponse, groundings } = await todoWithGrounding({
-        question,
-        content,
-        supplement,
-      });
-      const updatedTodo: z.infer<typeof TODOSchema> = {
-        ...todo,
-        aiTextResponseMarkdown: aiTextResponse,
-        groundings,
-        serverUpdatedDateTime: Timestamp.now(),
-      };
-
-      await todoDocRef.set(updatedTodo, { merge: true });
 
       const response: z.infer<typeof ResponseSchema> = {
         result: "OK",
         statusCode: 200,
         data: {
-          todo: updatedTodo,
+          result: "OK",
         },
       };
 
