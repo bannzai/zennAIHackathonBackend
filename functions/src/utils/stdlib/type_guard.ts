@@ -33,5 +33,11 @@ export function zodTypeGuard<T extends z.ZodTypeAny>(
   schema: T,
   data: unknown
 ): data is z.infer<T> {
-  return schema.safeParse(data).success;
+  const result = schema.safeParse(data);
+  if (process.env.APP_ENV === "local") {
+    if (!result.success) {
+      console.error(result.error);
+    }
+  }
+  return result.success;
 }
