@@ -93,6 +93,10 @@ export const fillTODOLocation = onFlow(
     name: "fillTODOLocation",
     inputSchema: FillLocationSchema,
     outputSchema: ResponseSchema,
+    httpsOptions: {
+      timeoutSeconds: 60 * 10,
+      memory: "1GiB",
+    },
     authPolicy: appAuthPolicy("fillTODOLocation"),
   },
   async (input) => {
