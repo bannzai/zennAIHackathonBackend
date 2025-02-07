@@ -53,7 +53,7 @@ const todoLocation = genkitAI.defineTool(
 
     const { aiTextResponse, groundings } = await googleSearchGroundingData(
       `
-        「${userLocation.name}」に居住している人が、 「${taskQuestion}」に関する 「${todo.content}。${todo.supplement ?? ""}」 に対応してくれる場所を出力してください。
+        「${userLocation.name}」から最寄りの 「${taskQuestion}」に関する 「${todo.content}。${todo.supplement ?? ""}」 に対応してくれる場所を出力してください。
         出力はmarkdown形式にしてください
         以下の情報を取得してください
         - 場所の名前
