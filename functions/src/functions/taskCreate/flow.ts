@@ -32,14 +32,18 @@ const todoWithGrounding = genkitAI.defineTool(
   {
     name: "todoWithGrounding",
     description: "todoWithGrounding",
-    inputSchema: TODOContentFromMarkdownSchema,
+    inputSchema: TODOContentFromMarkdownSchema.extend({
+      question: z.string(),
+    }),
     outputSchema: TODOWithGroundingSchema,
   },
   async (input) => {
     console.log(`#todoWithGrounding: ${JSON.stringify(input, null, 2)}`);
-    if (!input.supplement) {
+    const { question, content, supplement } = input;
+
+    if (!supplement) {
       const { aiTextResponse, groundings } = await googleSearchGroundingData(
-        `題名: ${input.content} を詳細に説明してください。出力はmarkdown形式にしてください`
+        `「${question}」に関する 「${content}」 に関して詳細に説明してください。出力はmarkdown形式にしてください`
       );
 
       return {
@@ -48,7 +52,7 @@ const todoWithGrounding = genkitAI.defineTool(
       };
     } else {
       const { aiTextResponse, groundings } = await googleSearchGroundingData(
-        `題名: ${input.content}, 補足: ${input.supplement} を詳細に説明してください。出力はmarkdown形式にしてください`
+        `「${question}」に関する 「${content}。${supplement}」 に関して詳細に説明してください。出力はmarkdown形式にしてください`
       );
 
       return {
@@ -271,6 +275,7 @@ export const taskCreate = genkitAI.defineFlow(
             .collection(`/users/${userID}/tasks/${taskID}/todos`)
             .doc();
           const { aiTextResponse, groundings } = await todoWithGrounding({
+            question,
             content,
             supplement,
           });
