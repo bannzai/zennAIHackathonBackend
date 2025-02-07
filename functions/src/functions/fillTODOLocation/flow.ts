@@ -1,4 +1,4 @@
-import { genkit, z } from "genkit";
+import { z } from "genkit";
 import { genkitAI, googleSearchGroundingData } from "../../utils/ai/ai";
 import { TODOSchema } from "../../entity/todo";
 import { database } from "../../utils/firebase/firebase";
@@ -38,7 +38,10 @@ const todoLocation = genkitAI.defineTool(
     name: "todoLocation",
     description: "todoLocation",
     inputSchema: z.object({
-      todo: TODOSchema,
+      todo: z.object({
+        content: z.string(),
+        supplement: z.string().nullish(),
+      }),
       taskQuestion: z.string(),
       userLocation: z.object({
         name: z.string(),
