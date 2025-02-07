@@ -74,7 +74,27 @@ export async function googleSearchGroundingData(
   );
   const returnErrors: any[] = [];
 
+  // NOTE: googleSearchGroundingData15FlashResult_1 が一番結果が返ってきやすい
+  let googleSearchGroundingData15FlashResult_1: Grounding | null = null;
+  try {
+    const model = googleSearchModel15Flash();
+    const result = await model.generateContent(query);
+    googleSearchGroundingData15FlashResult_1 = transformGroundingData(result);
+    console.log(JSON.stringify({ googleSearchGroundingData15FlashResult_1 }));
+  } catch (error) {
+    console.error(error);
+    returnErrors.push(
+      `googleSearchGroundingData15FlashResult_1: ${errorMessage(error)}`
+    );
+  }
+  if (
+    googleSearchGroundingData15FlashResult_1 &&
+    groundingHasTitleAndURL(googleSearchGroundingData15FlashResult_1)
+  ) {
+    return googleSearchGroundingData15FlashResult_1;
+  }
   let googleSearchGroundingData20FlashExp_1Result: Grounding | null = null;
+
   try {
     const model = googleSearchModel20FlashExp();
     const result = await model.generateContent({
@@ -122,25 +142,6 @@ export async function googleSearchGroundingData(
     return googleSearchGroundingData20FlashExp_2Result;
   }
 
-  let googleSearchGroundingData15FlashResult_1: Grounding | null = null;
-  try {
-    const model = googleSearchModel15Flash();
-    const result = await model.generateContent(query);
-    googleSearchGroundingData15FlashResult_1 = transformGroundingData(result);
-    console.log(JSON.stringify({ googleSearchGroundingData15FlashResult_1 }));
-  } catch (error) {
-    console.error(error);
-    returnErrors.push(
-      `googleSearchGroundingData15FlashResult_1: ${errorMessage(error)}`
-    );
-  }
-  if (
-    googleSearchGroundingData15FlashResult_1 &&
-    groundingHasTitleAndURL(googleSearchGroundingData15FlashResult_1)
-  ) {
-    return googleSearchGroundingData15FlashResult_1;
-  }
-
   let googleSearchGroundingData15FlashResult_2: Grounding | null = null;
   try {
     const model = googleSearchModel15Flash();
@@ -185,6 +186,7 @@ function transformGroundingData(result: GenerateContentResult): {
   const response = result.response;
   const candidates = response?.candidates;
   const groundings: GroundingData[] = [];
+  console.log(JSON.stringify({ candidates }, null, 2));
   if (candidates) {
     for (const candidate of candidates) {
       const groudingMetadata = candidate?.groundingMetadata;
