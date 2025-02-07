@@ -1,26 +1,21 @@
-import type z from "zod";
+import * as z from "zod";
 
 // NOTE: .partial() だと undefined にしかならない
-export type NullableReturn<T extends z.ZodRawShape> = z.ZodObject<
-  { [k in keyof T]: z.ZodNullable<T[k]> },
-  z.UnknownKeysParam,
-  z.ZodTypeAny
->;
+export function nullable<TSchema extends z.AnyZodObject>(schema: TSchema) {
+  const entries = Object.entries(schema.shape) as [
+    keyof TSchema["shape"],
+    z.ZodTypeAny,
+  ][];
 
-export function nullableSchema<T extends z.ZodRawShape>(
-  obj: z.ZodObject<T>
-): NullableReturn<T> {
-  const newShape: any = {};
+  const newProps = entries.reduce(
+    (acc, [key, value]) => {
+      acc[key] = value.nullable();
+      return acc;
+    },
+    {} as {
+      [key in keyof TSchema["shape"]]: z.ZodNullable<TSchema["shape"][key]>;
+    }
+  );
 
-  Object.keys(obj.shape).forEach((key) => {
-    const fieldSchema = obj.shape[key];
-    newShape[key] = fieldSchema.nullish();
-  });
-
-  const result: NullableReturn<T> = {
-    ...(obj.shape._def as any),
-    shape: () => newShape,
-  };
-
-  return result;
+  return z.object(newProps);
 }

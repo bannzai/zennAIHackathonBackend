@@ -4,7 +4,7 @@ import {
   FirestoreTimestampSchema,
   ServerTimestampSchema,
 } from "./util/timestamp";
-import { nullableSchema } from "../utils/stdlib/nullable";
+import { nullable } from "../utils/stdlib/nullable";
 
 export const TaskPreparedSchema = z
   .object({
@@ -31,7 +31,8 @@ export const TaskPreparedSchema = z
   })
   .merge(ServerTimestampSchema);
 
-export const TaskPreparingSchema = nullableSchema(TaskPreparedSchema.partial())
+export const TaskPreparingSchema = nullable(TaskPreparedSchema)
+  .partial()
   .required({
     id: true,
     userID: true,
