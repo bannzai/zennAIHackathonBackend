@@ -6,9 +6,6 @@ import { getFunctionURL } from "../../utils/firebase/gcp";
 import { onFlow } from "@genkit-ai/firebase/functions";
 import { genkitAI } from "../../utils/ai/ai";
 import { appAuthPolicy } from "../../utils/ai/authPolicy";
-import { database } from "../../utils/firebase/firebase";
-import { TaskPreparing } from "../../entity/task";
-import { Timestamp } from "firebase-admin/firestore";
 
 const ResponseSchema = z.union([
   DataResponseSchema.extend({
