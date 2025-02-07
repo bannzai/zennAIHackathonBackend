@@ -87,16 +87,16 @@ const todoLocation = genkitAI.defineTool(
 );
 
 // このflowはCloud Taskから使用されるのでエラーハンドリングは慎重に
-export const fillLocation = onFlow(
+export const fillTODOLocation = onFlow(
   genkitAI,
   {
-    name: "fillLocation",
+    name: "fillTODOLocation",
     inputSchema: FillLocationSchema,
     outputSchema: ResponseSchema,
-    authPolicy: appAuthPolicy("fillLocation"),
+    authPolicy: appAuthPolicy("fillTODOLocation"),
   },
   async (input) => {
-    console.log(`#fillLocation: ${JSON.stringify({ input }, null, 2)}`);
+    console.log(`#fillTODOLocation: ${JSON.stringify({ input }, null, 2)}`);
     try {
       const {
         taskID,
