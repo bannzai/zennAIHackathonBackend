@@ -19,3 +19,6 @@ export function nullable<TSchema extends z.AnyZodObject>(schema: TSchema) {
 
   return z.object(newProps);
 }
+
+export const nonNullable = <T>(value: T): value is NonNullable<T> =>
+  value != null;
