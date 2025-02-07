@@ -16,3 +16,6 @@ export const enqueueTODOPrepare =
   require("./functions/todoPrepare/enqueue_task").enqueueTODOPrepare;
 export const executeTODOPrepare =
   require("./functions/todoPrepare/execute_task").executeTODOPrepare;
+
+export const fillTODOLocation =
+  require("./functions/fillTODOLocation/enqueue_task").fillTODOLocation;
