@@ -24,6 +24,7 @@ export const enqueueTaskCreate = onFlow(
   {
     name: "enqueueTaskCreate",
     inputSchema: TaskCreateSchema.pick({
+      taskID: true,
       question: true,
       userRequest: true,
     }),
@@ -31,20 +32,7 @@ export const enqueueTaskCreate = onFlow(
     authPolicy: appAuthPolicy("enqueueTaskCreate"),
   },
   async (input) => {
-    const {
-      userRequest: { userID },
-    } = input;
-    const docRef = database.collection(`/users/${userID}/tasks`).doc();
-    const taskID = docRef.id;
-    const taskLoading: TaskPreparing = {
-      status: "preparing",
-      id: taskID,
-      userID,
-      question: input.question,
-      serverCreatedDateTime: Timestamp.now(),
-      serverUpdatedDateTime: Timestamp.now(),
-    };
-    database.doc(`/users/${userID}/tasks/${taskID}`).set(taskLoading);
+    const { taskID } = input;
 
     const queue = getFunctions().taskQueue("executeTaskCreate");
     const executeTaskCreateURL = await getFunctionURL("executeTaskCreate");
