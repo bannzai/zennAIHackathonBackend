@@ -186,7 +186,6 @@ function transformGroundingData(result: GenerateContentResult): {
   const response = result.response;
   const candidates = response?.candidates;
   const groundings: GroundingData[] = [];
-  console.log(JSON.stringify({ candidates }, null, 2));
   if (candidates) {
     for (const candidate of candidates) {
       const groudingMetadata = candidate?.groundingMetadata;
