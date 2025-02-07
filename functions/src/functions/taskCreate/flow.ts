@@ -264,13 +264,11 @@ export const taskCreate = genkitAI.defineFlow(
         } = await googleSearchGroundingData(
           `「${question}」 を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
         );
-        const formatToJSONFromMarkdownAnswerResult =
-          await todoContentFromMarkdown(todosAITextResponseMarkdown);
+        const todoContents = await todoContentFromMarkdown(
+          todosAITextResponseMarkdown
+        );
         const todos: z.infer<typeof TODOSchema>[] = [];
-        for (const {
-          content,
-          supplement,
-        } of formatToJSONFromMarkdownAnswerResult) {
+        for (const { content, supplement } of todoContents) {
           const todoDocRef = database
             .collection(`/users/${userID}/tasks/${taskID}/todos`)
             .doc();
