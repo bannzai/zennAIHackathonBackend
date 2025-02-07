@@ -17,51 +17,12 @@ import { GroundingDataSchema } from "../../entity/grounding";
 import { TaskCreateSchema } from "./input";
 import { Timestamp } from "firebase-admin/firestore";
 import { zodTypeGuard } from "../../utils/stdlib/type_guard";
+import { enqueueTODOPrepare } from "../todoPrepare/enqueue_task";
 
 const TODOContentFromMarkdownSchema = TODOSchema.pick({
   content: true,
   supplement: true,
 });
-
-const TODOWithGroundingSchema = z.object({
-  aiTextResponse: z.string(),
-  groundings: z.array(GroundingDataSchema),
-});
-
-const todoWithGrounding = genkitAI.defineTool(
-  {
-    name: "todoWithGrounding",
-    description: "todoWithGrounding",
-    inputSchema: TODOContentFromMarkdownSchema.extend({
-      question: z.string(),
-    }),
-    outputSchema: TODOWithGroundingSchema,
-  },
-  async (input) => {
-    console.log(`#todoWithGrounding: ${JSON.stringify(input, null, 2)}`);
-    const { question, content, supplement } = input;
-
-    if (!supplement) {
-      const { aiTextResponse, groundings } = await googleSearchGroundingData(
-        `「${question}」に関する 「${content}」 に関して詳細に説明してください。出力はmarkdown形式にしてください`
-      );
-
-      return {
-        aiTextResponse,
-        groundings,
-      };
-    } else {
-      const { aiTextResponse, groundings } = await googleSearchGroundingData(
-        `「${question}」に関する 「${content}。${supplement}」 に関して詳細に説明してください。出力はmarkdown形式にしてください`
-      );
-
-      return {
-        aiTextResponse,
-        groundings,
-      };
-    }
-  }
-);
 
 const todoContentFromMarkdown = genkitAI.defineTool(
   {
@@ -116,7 +77,10 @@ const generateDefinition = genkitAI.defineTool(
     inputSchema: z.object({
       topic: z.string(),
     }),
-    outputSchema: TODOWithGroundingSchema,
+    outputSchema: z.object({
+      aiTextResponse: z.string(),
+      groundings: z.array(GroundingDataSchema),
+    }),
   },
   async (input) => {
     console.log(`#generateDefinition: ${JSON.stringify({ input }, null, 2)}`);
@@ -256,8 +220,15 @@ export const taskCreate = genkitAI.defineFlow(
         taskLoading.todosGroundings.length === 0 ||
         taskLoading.todosAITextResponseMarkdown == null
       ) {
-        const batch = database.batch();
-        // NOTE: groundingはできるが、狙った形式を出力するのは難しい(後に結果をAIに渡して整形させるのはあり)
+        // NOTE: [TODOs:Idempotentency] todosGroundings,todosAIResponseMarkdownがnullの場合は、todosがこのタスクの中で正常に作られなかったので一回削除する
+        const todosCollectionRef = database.collection(
+          `/users/${userID}/tasks/${taskID}/todos`
+        );
+        const todosDocRefs = await todosCollectionRef.listDocuments();
+        for (const docRef of todosDocRefs) {
+          await docRef.delete();
+        }
+
         const {
           aiTextResponse: todosAITextResponseMarkdown,
           groundings: todosGroundings,
@@ -272,27 +243,36 @@ export const taskCreate = genkitAI.defineFlow(
           const todoDocRef = database
             .collection(`/users/${userID}/tasks/${taskID}/todos`)
             .doc();
-          const { aiTextResponse, groundings } = await todoWithGrounding({
-            question,
-            content,
-            supplement,
-          });
+
           const todo: TODO = {
             id: todoDocRef.id,
             userID,
             taskID,
             content,
             supplement,
-            aiTextResponseMarkdown: aiTextResponse,
-            groundings,
+            aiTextResponseMarkdown: null,
+            groundings: null,
             serverCreatedDateTime: Timestamp.now(),
             serverUpdatedDateTime: Timestamp.now(),
           };
           todos.push(todo);
 
-          batch.set(todoDocRef, todo, { merge: true });
+          await todoDocRef.set(todo, { merge: true });
+
+          // enqueue先でTODOのdocumentを参照するので先に作成
+          await enqueueTODOPrepare({
+            taskID,
+            todoID: todoDocRef.id,
+            question,
+            content,
+            supplement,
+            userRequest: { userID },
+          });
         }
 
+        // NOTE: [TODOs:Idempotentency] このスコープの一番上の方でtodosを全消ししている。
+        // todosGroundings,todosAIResponseMarkdownがnullの場合は、todosがこのタスクの中で正常に作られなかったと判断して一回削除している
+        // なので、todosGroundings,todosAIResponseMarkdownは最後にセットする必要がある
         const updatedTaskSchema = TaskPreparingSchema.pick({
           todosGroundings: true,
           todosAITextResponseMarkdown: true,
@@ -303,8 +283,8 @@ export const taskCreate = genkitAI.defineFlow(
           todosAITextResponseMarkdown,
           serverUpdatedDateTime: Timestamp.now(),
         };
-        batch.set(taskDocRef, updatedTask, { merge: true });
-        await batch.commit();
+
+        await taskDocRef.set(updatedTask, { merge: true });
       }
 
       const updateTaskSchema = TaskPreparedSchema.pick({

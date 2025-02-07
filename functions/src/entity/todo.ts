@@ -9,8 +9,8 @@ export const TODOSchema = z
     taskID: z.string(),
     content: z.string().describe("TODOの内容"),
     supplement: z.string().describe("補足情報"),
-    aiTextResponseMarkdown: z.string(),
-    groundings: z.array(GroundingDataSchema),
+    aiTextResponseMarkdown: z.string().nullable(),
+    groundings: z.array(GroundingDataSchema).nullable(),
   })
   .merge(ServerTimestampSchema);
 

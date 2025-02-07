@@ -20,14 +20,11 @@ export const executeTaskCreate = onTaskDispatched(
   async (req) => {
     console.log("#executeTaskCreate");
     try {
-      const task = req.data as z.infer<typeof TaskCreateSchema>;
-      const response = await taskCreate(task);
+      const input = req.data as z.infer<typeof TaskCreateSchema>;
+      const response = await taskCreate(input);
       console.log(response);
-      // TODO: Change state `Task` to `Done`;
-      return;
     } catch (err) {
       functions.logger.error(errorMessage(err));
-      return;
     }
   }
 );

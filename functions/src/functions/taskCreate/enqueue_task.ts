@@ -29,11 +29,9 @@ export const enqueueTaskCreate = onFlow(
     authPolicy: appAuthPolicy("enqueueTaskCreate"),
   },
   async (input) => {
-    const { taskID } = input;
-
     const queue = getFunctions().taskQueue("executeTaskCreate");
     const executeTaskCreateURL = await getFunctionURL("executeTaskCreate");
-    queue.enqueue(Object.assign(input, { taskID }), {
+    queue.enqueue(input, {
       uri: executeTaskCreateURL,
       headers: {
         "Content-Type": "application/json",
@@ -44,7 +42,7 @@ export const enqueueTaskCreate = onFlow(
       result: "OK",
       statusCode: 200,
       data: {
-        taskID,
+        taskID: input.taskID,
       },
     };
 
