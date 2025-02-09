@@ -14,14 +14,15 @@ import { LocationSchema } from "../../entity/location";
 import { queryLocation } from "../../utils/queryLocation";
 import { FillTODOLocationSchema } from "./input";
 
-export const ResponseSchema = z.union([
+const TODOResponseSchema = TODOSchema.extend({
+  locations: z.array(LocationSchema),
+  locationsAITextResponse: z.string(),
+  locationsGroundings: z.array(GroundingDataSchema),
+});
+const ResponseSchema = z.union([
   DataResponseSchema.extend({
     data: z.object({
-      todo: TODOSchema.extend({
-        locations: z.array(LocationSchema),
-        locationsAITextResponse: z.string(),
-        locationsGroundings: z.array(GroundingDataSchema),
-      }),
+      todo: TODOResponseSchema,
     }),
   }),
   ErrorResponseSchema,
@@ -70,16 +71,19 @@ export const fillTODOLocation = genkitAI.defineFlow(
         query: `${userLocation.name}周辺 ${task.question}に関して、次の文章に対する問い合わせ先を教えてください「${todo.content}: ${todo.supplement ?? ""}」`,
       });
 
+      const todoUpdate: z.infer<typeof TODOResponseSchema> = {
+        ...todo,
+        locations: locations,
+        locationsAITextResponse: aiTextResponse,
+        locationsGroundings: groundings,
+      };
+      await todoDocRef.set(todoUpdate, { merge: true });
+
       const response: z.infer<typeof ResponseSchema> = {
         result: "OK",
         statusCode: 200,
         data: {
-          todo: {
-            ...todo,
-            locations: locations,
-            locationsAITextResponse: aiTextResponse,
-            locationsGroundings: groundings,
-          },
+          todo: todoUpdate,
         },
       };
 

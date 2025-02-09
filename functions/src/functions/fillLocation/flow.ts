@@ -13,14 +13,15 @@ import { TaskPreparedSchema } from "../../entity/task";
 import { LocationSchema } from "../../entity/location";
 import { queryLocation } from "../../utils/queryLocation";
 
-export const ResponseSchema = z.union([
+const TaskResponseSchema = TaskPreparedSchema.extend({
+  locations: z.array(LocationSchema),
+  locationsAITextResponse: z.string(),
+  locationsGroundings: z.array(GroundingDataSchema),
+});
+const ResponseSchema = z.union([
   DataResponseSchema.extend({
     data: z.object({
-      task: TaskPreparedSchema.extend({
-        locations: z.array(LocationSchema),
-        locationsAITextResponse: z.string(),
-        locationsGroundings: z.array(GroundingDataSchema),
-      }),
+      task: TaskResponseSchema,
     }),
   }),
   ErrorResponseSchema,
@@ -58,16 +59,20 @@ export const fillTaskLocation = genkitAI.defineFlow(
         query: `${userLocation.name}周辺 ${task.question}に関しての問い合わせ先を教えてください`,
       });
 
+      const taskUpdate: z.infer<typeof TaskResponseSchema> = {
+        ...task,
+        locations: locations,
+        locationsAITextResponse: aiTextResponse,
+        locationsGroundings: groundings,
+      };
+
+      await taskDocRef.set(taskUpdate, { merge: true });
+
       const response: z.infer<typeof ResponseSchema> = {
         result: "OK",
         statusCode: 200,
         data: {
-          task: {
-            ...task,
-            locations: locations,
-            locationsAITextResponse: aiTextResponse,
-            locationsGroundings: groundings,
-          },
+          task: taskUpdate,
         },
       };
 
