@@ -8,7 +8,8 @@ import { todoPrepare } from "./flow";
 export const executeTODOPrepare = onTaskDispatched(
   {
     retryConfig: {
-      maxAttempts: 50,
+      // TODO: 提出する時に50とかにしよう
+      maxAttempts: 10,
       minBackoffSeconds: 60,
     },
     rateLimits: {

@@ -8,7 +8,7 @@ import { errorMessage } from "../../utils/error/message";
 export const executeFillLocation = onTaskDispatched(
   {
     retryConfig: {
-      maxAttempts: 20,
+      maxAttempts: 10,
       minBackoffSeconds: 60,
     },
     rateLimits: {
