@@ -4,6 +4,7 @@ import { onTaskDispatched } from "firebase-functions/tasks";
 import { TODOPrepareSchema } from "./input";
 import { errorMessage } from "../../utils/error/message";
 import { todoPrepare } from "./flow";
+import { TaskRetryError } from "../../utils/error/taskRetry";
 
 export const executeTODOPrepare = onTaskDispatched(
   {
@@ -26,6 +27,9 @@ export const executeTODOPrepare = onTaskDispatched(
       console.log(response);
     } catch (err) {
       functions.logger.error(errorMessage(err));
+      if (err instanceof TaskRetryError) {
+        throw err;
+      }
     }
   }
 );

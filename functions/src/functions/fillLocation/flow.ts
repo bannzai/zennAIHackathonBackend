@@ -12,6 +12,8 @@ import { FillLocationSchema } from "./input";
 import { TaskPreparedSchema } from "../../entity/task";
 import { LocationSchema } from "../../entity/location";
 import { queryLocation } from "../../utils/queryLocation";
+import { TaskRetryError } from "../../utils/error/taskRetry";
+import { errorMessage } from "../../utils/error/message";
 
 const TaskResponseSchema = TaskPreparedSchema.extend({
   locations: z.array(LocationSchema),
@@ -27,6 +29,7 @@ const ResponseSchema = z.union([
   ErrorResponseSchema,
 ]);
 
+// このflowはCloud Taskから使用されるのでエラーハンドリングは慎重に
 export const fillTaskLocation = genkitAI.defineFlow(
   {
     name: "fillTaskLocation",
@@ -57,6 +60,8 @@ export const fillTaskLocation = genkitAI.defineFlow(
       // e.g) 杉並区成田東4丁目周辺 確定申告に関しての問い合わせ先を教えてください「申告方法の選択: e-Taxを利用するか、郵送または税務署への持参するか決定します
       const { aiTextResponse, groundings, locations } = await queryLocation({
         query: `${userLocation.name}周辺 ${task.question}に関しての問い合わせ先を教えてください`,
+      }).catch((err) => {
+        throw new TaskRetryError(`queryLocation failed. ${errorMessage(err)}`);
       });
 
       const taskUpdate: z.infer<typeof TaskResponseSchema> = {
@@ -78,6 +83,9 @@ export const fillTaskLocation = genkitAI.defineFlow(
 
       return response;
     } catch (error) {
+      if (error instanceof TaskRetryError) {
+        throw error;
+      }
       return errorResponse(error);
     }
   }

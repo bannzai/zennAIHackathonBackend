@@ -4,6 +4,7 @@ import { onTaskDispatched } from "firebase-functions/tasks";
 import { taskCreate } from "./flow";
 import { TaskCreateSchema } from "./input";
 import { errorMessage } from "../../utils/error/message";
+import { TaskRetryError } from "../../utils/error/taskRetry";
 
 export const executeTaskCreate = onTaskDispatched(
   {
@@ -25,6 +26,9 @@ export const executeTaskCreate = onTaskDispatched(
       console.log(response);
     } catch (err) {
       functions.logger.error(errorMessage(err));
+      if (err instanceof TaskRetryError) {
+        throw err;
+      }
     }
   }
 );

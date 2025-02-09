@@ -4,6 +4,7 @@ import { onTaskDispatched } from "firebase-functions/tasks";
 import { fillTaskLocation } from "./flow";
 import { FillLocationSchema } from "./input";
 import { errorMessage } from "../../utils/error/message";
+import { TaskRetryError } from "../../utils/error/taskRetry";
 
 export const executeFillLocation = onTaskDispatched(
   {
@@ -25,6 +26,9 @@ export const executeFillLocation = onTaskDispatched(
       console.log({ fillTaskLocationResponse });
     } catch (err) {
       functions.logger.error(errorMessage(err));
+      if (err instanceof TaskRetryError) {
+        throw err;
+      }
     }
   }
 );
