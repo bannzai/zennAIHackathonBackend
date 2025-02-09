@@ -5,7 +5,7 @@ import { fillTaskLocation } from "./flow";
 import { FillLocationSchema } from "./input";
 import { errorMessage } from "../../utils/error/message";
 
-export const executeFillTaskLocation = onTaskDispatched(
+export const executeFillLocation = onTaskDispatched(
   {
     retryConfig: {
       maxAttempts: 3,
