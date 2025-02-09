@@ -215,6 +215,7 @@ export const taskCreate = genkitAI.defineFlow(
           .set(updatedTask, { merge: true });
       }
 
+      // NOTE: question, topic が必要なので、queueに詰める作業はその後である必要がある
       if (
         taskLoading.todosGroundings == null ||
         taskLoading.todosGroundings.length === 0 ||
@@ -267,6 +268,7 @@ export const taskCreate = genkitAI.defineFlow(
             taskID,
             todoID: todoDocRef.id,
             question,
+            taskTopic: taskLoading.topic ?? "",
             content,
             supplement,
             userRequest: { userID },

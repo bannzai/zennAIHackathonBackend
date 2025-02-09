@@ -17,6 +17,11 @@ export const TODOSchema = z
     locations: z.array(LocationSchema).nullable(),
     locationsAITextResponse: z.string().nullable(),
     locationsGroundings: z.array(GroundingDataSchema).nullable(),
+
+    // 所要時間(秒)
+    timeRequired: z.number().describe("所要時間(秒)").nullish(),
+    timeRequiredAITextResponse: z.string().nullish(),
+    timeRequiredGroundings: z.array(GroundingDataSchema).nullish(),
   })
   .merge(ServerTimestampSchema);
 

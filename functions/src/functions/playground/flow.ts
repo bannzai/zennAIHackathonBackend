@@ -127,7 +127,7 @@ export const playground2 = genkitAI.defineFlow(
 
     const prompt = `
     タスク: 「${task.topic}」を終了したいです。
-    下記の手順が存在します。それぞれのタスクに対しての所要時間を教えてください
+    下記の手順が存在します。それぞれのタスクに対しての所要時間を教えてください。単位は秒です。
     ${todoPrompt}
     `;
     console.log(`#playground2: ${prompt}`);
@@ -162,7 +162,6 @@ export const playground2 = genkitAI.defineFlow(
       output: {
         schema: z.array(
           z.object({
-            index: z.number().describe("タスクのインデックス"),
             taskName: z.string().describe("タスク名"),
             seconds: z.number().describe("所要時間(秒)"),
           })
