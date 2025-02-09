@@ -29,9 +29,9 @@ export const TaskPreparedSchema = z
     completed: z.boolean(),
     // タスクの代表的な場所
     // 未処理の場合はnull。処理完了の場合は空配列の可能性がある
-    locations: z.array(LocationSchema).nullable(),
-    locationsAITextResponse: z.string().nullable(),
-    locationsGroundings: z.array(GroundingDataSchema).nullable(),
+    locations: z.array(LocationSchema).nullish(),
+    locationsAITextResponse: z.string().nullish(),
+    locationsGroundings: z.array(GroundingDataSchema).nullish(),
 
     preparedDateTime: FirestoreTimestampSchema,
   })
