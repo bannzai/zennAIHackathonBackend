@@ -6,6 +6,7 @@ import { getFunctionURL } from "../../utils/firebase/gcp";
 import { onFlow } from "@genkit-ai/firebase/functions";
 import { genkitAI } from "../../utils/ai/ai";
 import { appAuthPolicy } from "../../utils/ai/authPolicy";
+import { enqueueFillTODOLocations } from "../fillTODOLocation/enqueue_task";
 
 const ResponseSchema = z.union([
   DataResponseSchema.extend({
@@ -33,6 +34,8 @@ export const enqueueFillLocation = onFlow(
         "Content-Type": "application/json",
       },
     });
+
+    await enqueueFillTODOLocations(input);
 
     const response: z.infer<typeof ResponseSchema> = {
       result: "OK",

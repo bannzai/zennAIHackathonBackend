@@ -9,6 +9,7 @@ import { appAuthPolicy } from "../../utils/ai/authPolicy";
 import { database } from "../../utils/firebase/firebase";
 import { TODOSchema } from "../../entity/todo";
 import { zodTypeGuard } from "../../utils/stdlib/type_guard";
+import { FillLocationSchema } from "../fillLocation/input";
 
 const ResponseSchema = z.union([
   DataResponseSchema.extend({
@@ -51,13 +52,12 @@ export const enqueueFillTODOLocation = onFlow(
   }
 );
 
-export const enqueueFillTODOLocations = onFlow(
-  genkitAI,
+export const enqueueFillTODOLocations = genkitAI.defineTool(
   {
     name: "enqueueFillTODOLocations",
-    inputSchema: FillTODOLocationSchema,
+    description: "enqueueFillTODOLocations",
+    inputSchema: FillLocationSchema,
     outputSchema: ResponseSchema,
-    authPolicy: appAuthPolicy("enqueueFillTODOLocations"),
   },
   async (input) => {
     const queue = getFunctions().taskQueue("executeFillTODOLocation");
