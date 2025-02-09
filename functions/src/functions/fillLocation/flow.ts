@@ -50,7 +50,7 @@ export const fillTaskLocation = genkitAI.defineFlow(
       const task = taskSnapshot.data();
       if (!zodTypeGuard(TaskPreparedSchema, task)) {
         return errorResponse(
-          new Error(`task loading parse error. taskLoading: ${task}`)
+          new Error(`task prepared parse error. taskPrepared: ${task}`)
         );
       }
 
