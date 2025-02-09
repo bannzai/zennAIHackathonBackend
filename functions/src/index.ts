@@ -17,4 +17,5 @@ export const enqueueTODOPrepare =
 export const executeTODOPrepare =
   require("./functions/todoPrepare/execute_task").executeTODOPrepare;
 
-export const playground = require("./functions/playground/flow").playground;
+export const fillLocation =
+  require("./functions/fillLocation/enqueue_task").fillLocation;
