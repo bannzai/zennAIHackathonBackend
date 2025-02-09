@@ -14,7 +14,9 @@ export const TODOSchema = z
     groundings: z.array(GroundingDataSchema).nullable(),
     // TODOの代表的な場所
     // 未処理の場合はnull。処理完了の場合は空配列の可能性がある
-    locations: z.union([z.null(), z.array(LocationSchema)]),
+    locations: z.array(LocationSchema).nullable(),
+    locationsAITextResponse: z.string().nullable(),
+    locationsGroundings: z.array(GroundingDataSchema).nullable(),
   })
   .merge(ServerTimestampSchema);
 
