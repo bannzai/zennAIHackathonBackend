@@ -5,6 +5,7 @@ import {
   ServerTimestampSchema,
 } from "./util/timestamp";
 import { nullable } from "../utils/stdlib/nullable";
+import { LocationSchema } from "./location";
 
 export const TaskPreparedSchema = z
   .object({
@@ -26,6 +27,8 @@ export const TaskPreparedSchema = z
     // TODOのAIの回答のソースとなったもの
     definitionGroundings: z.array(GroundingDataSchema),
     completed: z.boolean(),
+    // タスクの代表的な場所
+    locations: z.array(LocationSchema),
 
     preparedDateTime: FirestoreTimestampSchema,
   })
