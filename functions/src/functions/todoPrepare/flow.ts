@@ -1,6 +1,6 @@
 import { z } from "genkit";
 import { genkitAI, googleSearchGroundingData } from "../../utils/ai/ai";
-import { TODOSchema } from "../../entity/todo";
+import { TODO, TODOSchema } from "../../entity/todo";
 import { database } from "../../utils/firebase/firebase";
 import {
   DataResponseSchema,
@@ -93,6 +93,7 @@ export const todoPrepare = genkitAI.defineFlow(
           new Error(`todo loading parse error. todoLoading: ${todo}`)
         );
       }
+
       if (
         todo.groundings != null &&
         todo.aiTextResponseMarkdown != null &&
@@ -105,46 +106,85 @@ export const todoPrepare = genkitAI.defineFlow(
         };
         return response;
       }
-      const {
-        timeRequired,
-        aiTextResponse: timeRequiredAITextResponse,
-        groundings: timeRequiredGroundings,
-      } = await todoTimeRequired({
-        taskTopic: input.taskTopic,
-        content,
-        supplement,
-      }).catch((err) => {
-        throw new TaskRetryError(
-          `todoTimeRequired failed. ${errorMessage(err)}`
-        );
-      });
 
-      const { aiTextResponse, groundings } = await todoWithGrounding({
-        question,
-        content,
-        supplement,
-      }).catch((err) => {
-        throw new TaskRetryError(
-          `todoWithGrounding failed. ${errorMessage(err)}`
-        );
-      });
-      const updatedTodo: z.infer<typeof TODOSchema> = {
-        ...todo,
-        aiTextResponseMarkdown: aiTextResponse,
-        groundings,
-        timeRequired,
-        timeRequiredAITextResponse,
-        timeRequiredGroundings,
-        serverUpdatedDateTime: Timestamp.now(),
-      };
+      if (todo.aiTextResponseMarkdown == null || todo.groundings == null) {
+        const { aiTextResponse, groundings } = await todoWithGrounding({
+          question,
+          content,
+          supplement,
+        }).catch((err) => {
+          throw new TaskRetryError(
+            `todoWithGrounding failed. ${errorMessage(err)}`
+          );
+        });
+        const updateTodoSchema = TODOSchema.pick({
+          aiTextResponseMarkdown: true,
+          groundings: true,
+          serverUpdatedDateTime: true,
+        });
+        const updatedTodo: z.infer<typeof updateTodoSchema> = {
+          aiTextResponseMarkdown: aiTextResponse,
+          groundings,
+          serverUpdatedDateTime: Timestamp.now(),
+        };
 
-      await todoDocRef.set(updatedTodo, { merge: true });
+        await todoDocRef.set(
+          {
+            ...todo,
+            ...updatedTodo,
+          },
+          { merge: true }
+        );
+      }
+
+      if (todo.timeRequired == null) {
+        const {
+          timeRequired,
+          aiTextResponse: timeRequiredAITextResponse,
+          groundings: timeRequiredGroundings,
+        } = await todoTimeRequired({
+          taskTopic: input.taskTopic,
+          content,
+          supplement,
+        }).catch((err) => {
+          throw new TaskRetryError(
+            `todoTimeRequired failed. ${errorMessage(err)}`
+          );
+        });
+
+        const updateTodoSchema = TODOSchema.pick({
+          timeRequired: true,
+          timeRequiredAITextResponse: true,
+          timeRequiredGroundings: true,
+          serverUpdatedDateTime: true,
+        });
+        const updatedTodo: z.infer<typeof updateTodoSchema> = {
+          timeRequired,
+          timeRequiredAITextResponse,
+          timeRequiredGroundings,
+          serverUpdatedDateTime: Timestamp.now(),
+        };
+
+        await todoDocRef.set(
+          {
+            ...todo,
+            ...updatedTodo,
+          },
+          { merge: true }
+        );
+      }
+
+      const newTODODoc = await database
+        .collection(`/users/${userID}/tasks/${taskID}/todos`)
+        .doc(todoID)
+        .get();
+      const newTodo = newTODODoc.data() as TODO;
 
       const response: z.infer<typeof ResponseSchema> = {
         result: "OK",
         statusCode: 200,
         data: {
-          todo: updatedTodo,
+          todo: newTodo,
         },
       };
 
