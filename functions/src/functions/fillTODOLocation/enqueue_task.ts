@@ -6,6 +6,9 @@ import { getFunctionURL } from "../../utils/firebase/gcp";
 import { onFlow } from "@genkit-ai/firebase/functions";
 import { genkitAI } from "../../utils/ai/ai";
 import { appAuthPolicy } from "../../utils/ai/authPolicy";
+import { database } from "../../utils/firebase/firebase";
+import { TODOSchema } from "../../entity/todo";
+import { zodTypeGuard } from "../../utils/stdlib/type_guard";
 
 const ResponseSchema = z.union([
   DataResponseSchema.extend({
@@ -29,12 +32,57 @@ export const enqueueFillTODOLocation = onFlow(
     const executeFillTODOLocationURL = await getFunctionURL(
       "executeFillTODOLocation"
     );
-    queue.enqueue(input, {
+    await queue.enqueue(input, {
       uri: executeFillTODOLocationURL,
       headers: {
         "Content-Type": "application/json",
       },
     });
+
+    const response: z.infer<typeof ResponseSchema> = {
+      result: "OK",
+      statusCode: 200,
+      data: {
+        taskID: input.taskID,
+      },
+    };
+
+    return response;
+  }
+);
+
+export const enqueueFillTODOLocations = onFlow(
+  genkitAI,
+  {
+    name: "enqueueFillTODOLocations",
+    inputSchema: FillTODOLocationSchema,
+    outputSchema: ResponseSchema,
+    authPolicy: appAuthPolicy("enqueueFillTODOLocations"),
+  },
+  async (input) => {
+    const queue = getFunctions().taskQueue("executeFillTODOLocation");
+    const executeFillTODOLocationURL = await getFunctionURL(
+      "executeFillTODOLocation"
+    );
+
+    const todosCollectionRef = database.collection(
+      `/users/${input.userRequest.userID}/tasks/${input.taskID}/todos`
+    );
+    const todoDocRefs = await todosCollectionRef.listDocuments();
+    for (const todoDocRef of todoDocRefs) {
+      const todoDoc = await todoDocRef.get();
+      const todo = todoDoc.data();
+      if (!zodTypeGuard(TODOSchema, todo)) {
+        continue;
+      }
+
+      await queue.enqueue(input, {
+        uri: executeFillTODOLocationURL,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
 
     const response: z.infer<typeof ResponseSchema> = {
       result: "OK",

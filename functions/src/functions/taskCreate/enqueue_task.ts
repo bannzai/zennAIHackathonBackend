@@ -31,7 +31,7 @@ export const enqueueTaskCreate = onFlow(
   async (input) => {
     const queue = getFunctions().taskQueue("executeTaskCreate");
     const executeTaskCreateURL = await getFunctionURL("executeTaskCreate");
-    queue.enqueue(input, {
+    await queue.enqueue(input, {
       uri: executeTaskCreateURL,
       headers: {
         "Content-Type": "application/json",

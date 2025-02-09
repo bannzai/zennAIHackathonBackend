@@ -24,7 +24,7 @@ export const enqueueTODOPrepare = genkitAI.defineTool(
   async (input) => {
     const queue = getFunctions().taskQueue("executeTODOPrepare");
     const executeTODOPrepareURL = await getFunctionURL("executeTODOPrepare");
-    queue.enqueue(input, {
+    await queue.enqueue(input, {
       uri: executeTODOPrepareURL,
       headers: {
         "Content-Type": "application/json",

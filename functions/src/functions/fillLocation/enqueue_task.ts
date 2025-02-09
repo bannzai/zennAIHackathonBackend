@@ -27,7 +27,7 @@ export const enqueueFillLocation = onFlow(
   async (input) => {
     const queue = getFunctions().taskQueue("executeFillLocation");
     const executeFillLocationURL = await getFunctionURL("executeFillLocation");
-    queue.enqueue(input, {
+    await queue.enqueue(input, {
       uri: executeFillLocationURL,
       headers: {
         "Content-Type": "application/json",
