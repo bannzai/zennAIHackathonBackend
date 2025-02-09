@@ -19,8 +19,12 @@ export const queryLocation = genkitAI.defineFlow(
   async (input) => {
     console.log(`#queryLocation: ${JSON.stringify({ input }, null, 2)}`);
     const response = await genkitAI.generate({
-      prompt: input.query,
+      prompt:
+        input.query +
+        "\n" +
+        "場所の名称,郵便番号,住所(郵便番号を除く),メールアドレス,電話番号。これらの情報を提供してください。見つからない場合はその旨も書いてください",
     });
+    const aiTextResponse = response.text ?? "";
     const responseCustom = response.custom as any;
     const candidates = responseCustom.candidates;
     const groundings: GroundingData[] = [];
@@ -41,7 +45,12 @@ export const queryLocation = genkitAI.defineFlow(
     }
 
     const jsonResponse = await genkitAI.generate({
-      prompt: input.query,
+      prompt: `
+      次の文章から場所に関する情報を取り出してください
+      ----
+      ${aiTextResponse}
+      ----
+      `,
       output: {
         schema: z.array(LocationSchema),
       },
@@ -50,7 +59,7 @@ export const queryLocation = genkitAI.defineFlow(
     const locations = jsonResponse.output ?? [];
 
     return {
-      aiTextResponse: response.text ?? "",
+      aiTextResponse,
       groundings,
       locations,
     };
