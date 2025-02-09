@@ -18,13 +18,6 @@ export const queryLocation = genkitAI.defineFlow(
   },
   async (input) => {
     console.log(`#queryLocation: ${JSON.stringify({ input }, null, 2)}`);
-    if (process.env.APP_ENV !== "local") {
-      return {
-        aiTextResponse: "localのみ実行できます",
-        groundings: [],
-        locations: [],
-      };
-    }
     const response = await genkitAI.generate({
       prompt: input.query,
     });
