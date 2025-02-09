@@ -253,6 +253,8 @@ export const taskCreate = genkitAI.defineFlow(
             aiTextResponseMarkdown: null,
             groundings: null,
             locations: null,
+            locationsAITextResponse: null,
+            locationsGroundings: null,
             serverCreatedDateTime: Timestamp.now(),
             serverUpdatedDateTime: Timestamp.now(),
           };

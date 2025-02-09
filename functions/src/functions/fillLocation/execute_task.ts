@@ -1,9 +1,11 @@
 import * as functions from "firebase-functions";
 import { z } from "zod";
 import { onTaskDispatched } from "firebase-functions/tasks";
-import { fillTaskLocation, fillTODOLocation } from "./flow";
-import { FillLocationSchema, FillTODOLocationSchema } from "./input";
+import { fillTaskLocation } from "./flow";
+import { FillLocationSchema } from "./input";
 import { errorMessage } from "../../utils/error/message";
+import { FillTODOLocationSchema } from "../fillTODOLocation/input";
+import { fillTODOLocation } from "../fillTODOLocation/flow";
 
 export const executeFillTaskLocation = onTaskDispatched(
   {
