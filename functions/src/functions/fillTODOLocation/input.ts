@@ -6,8 +6,6 @@ export const FillTODOLocationSchema = z.object({
   todoID: z.string(),
   userLocation: z.object({
     name: z.string(),
-    latitude: z.number(),
-    longitude: z.number(),
   }),
   userRequest: UserRequestSchema,
 });

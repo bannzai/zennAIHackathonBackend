@@ -76,7 +76,11 @@ export const enqueueFillTODOLocations = genkitAI.defineTool(
         continue;
       }
 
-      await queue.enqueue(input, {
+      const taskInput: z.infer<typeof FillTODOLocationSchema> = {
+        ...input,
+        todoID: todo.id,
+      };
+      await queue.enqueue(taskInput, {
         uri: executeFillTODOLocationURL,
         headers: {
           "Content-Type": "application/json",
