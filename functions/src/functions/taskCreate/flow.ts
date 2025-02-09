@@ -18,6 +18,8 @@ import { TaskCreateSchema } from "./input";
 import { Timestamp } from "firebase-admin/firestore";
 import { zodTypeGuard } from "../../utils/stdlib/type_guard";
 import { enqueueTODOPrepare } from "../todoPrepare/enqueue_task";
+import { TaskRetryError } from "../../utils/error/taskRetry";
+import { errorMessage } from "../../utils/error/message";
 
 const TODOContentFromMarkdownSchema = TODOSchema.pick({
   content: true,
@@ -173,11 +175,17 @@ export const taskCreate = genkitAI.defineFlow(
         taskLoading.definitionAITextResponse == null ||
         taskLoading.definitionGroundings == null
       ) {
-        const topic = await extractTopic({ question });
+        const topic = await extractTopic({ question }).catch((err) => {
+          throw new TaskRetryError(`extractTopic failed. ${errorMessage(err)}`);
+        });
         const {
           aiTextResponse: definitionAITextResponse,
           groundings: definitionGroundings,
-        } = await generateDefinition({ topic });
+        } = await generateDefinition({ topic }).catch((err) => {
+          throw new TaskRetryError(
+            `generateDefinition failed. ${errorMessage(err)}`
+          );
+        });
 
         const updatedTaskSchema = TaskPreparingSchema.pick({
           topic: true,
@@ -197,9 +205,15 @@ export const taskCreate = genkitAI.defineFlow(
       }
 
       if (taskLoading.shortAnswer == null) {
-        const shortAnswerResponse = await genkitAI.generate({
-          prompt: `「${question}」 を短く回答してください`,
-        });
+        const shortAnswerResponse = await genkitAI
+          .generate({
+            prompt: `「${question}」 を短く回答してください`,
+          })
+          .catch((err) => {
+            throw new TaskRetryError(
+              `generateShortAnswer failed. ${errorMessage(err)}`
+            );
+          });
         const shortAnswer = shortAnswerResponse.text;
 
         const updatedTaskSchema = TaskPreparingSchema.pick({
@@ -235,10 +249,18 @@ export const taskCreate = genkitAI.defineFlow(
           groundings: todosGroundings,
         } = await googleSearchGroundingData(
           `「${question}」 を達成するために必要なTODOリストを出力してください。markdown形式で出力してください`
-        );
+        ).catch((err) => {
+          throw new TaskRetryError(
+            `googleSearchGroundingData failed. ${errorMessage(err)}`
+          );
+        });
         const todoContents = await todoContentFromMarkdown(
           todosAITextResponseMarkdown
-        );
+        ).catch((err) => {
+          throw new TaskRetryError(
+            `todoContentFromMarkdown failed. ${errorMessage(err)}`
+          );
+        });
         const todos: z.infer<typeof TODOSchema>[] = [];
         for (const { content, supplement } of todoContents) {
           const todoDocRef = database
@@ -335,6 +357,9 @@ export const taskCreate = genkitAI.defineFlow(
 
       return response;
     } catch (error) {
+      if (error instanceof TaskRetryError) {
+        throw error;
+      }
       return errorResponse(error);
     }
   }

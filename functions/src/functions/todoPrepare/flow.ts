@@ -12,6 +12,8 @@ import { TODOPrepareSchema } from "./input";
 import { GroundingData, GroundingDataSchema } from "../../entity/grounding";
 import { zodTypeGuard } from "../../utils/stdlib/type_guard";
 import { GroundingChunk } from "@google/generative-ai";
+import { TaskRetryError } from "../../utils/error/taskRetry";
+import { errorMessage } from "../../utils/error/message";
 
 const todoWithGrounding = genkitAI.defineTool(
   {
@@ -111,12 +113,20 @@ export const todoPrepare = genkitAI.defineFlow(
         taskTopic: input.taskTopic,
         content,
         supplement,
+      }).catch((err) => {
+        throw new TaskRetryError(
+          `todoTimeRequired failed. ${errorMessage(err)}`
+        );
       });
 
       const { aiTextResponse, groundings } = await todoWithGrounding({
         question,
         content,
         supplement,
+      }).catch((err) => {
+        throw new TaskRetryError(
+          `todoWithGrounding failed. ${errorMessage(err)}`
+        );
       });
       const updatedTodo: z.infer<typeof TODOSchema> = {
         ...todo,
@@ -140,6 +150,9 @@ export const todoPrepare = genkitAI.defineFlow(
 
       return response;
     } catch (error) {
+      if (error instanceof TaskRetryError) {
+        throw error;
+      }
       return errorResponse(error);
     }
   }

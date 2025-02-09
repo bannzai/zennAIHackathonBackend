@@ -13,6 +13,8 @@ import { TaskPreparedSchema } from "../../entity/task";
 import { LocationSchema } from "../../entity/location";
 import { queryLocation } from "../../utils/queryLocation";
 import { FillTODOLocationSchema } from "./input";
+import { TaskRetryError } from "../../utils/error/taskRetry";
+import { errorMessage } from "../../utils/error/message";
 
 const TODOResponseSchema = TODOSchema.extend({
   locations: z.array(LocationSchema),
@@ -69,6 +71,8 @@ export const fillTODOLocation = genkitAI.defineFlow(
       // e.g) 杉並区成田東4丁目周辺 確定申告に関して、次の文章に対する問い合わせ先を教えてください「申告方法の選択: e-Taxを利用するか、郵送または税務署への持参するか決定します」
       const { aiTextResponse, groundings, locations } = await queryLocation({
         query: `${userLocation.name}周辺 ${task.question}に関して、次の文章に対する問い合わせ先を教えてください「${todo.content}: ${todo.supplement ?? ""}」`,
+      }).catch((err) => {
+        throw new TaskRetryError(`queryLocation failed. ${errorMessage(err)}`);
       });
 
       const todoUpdate: z.infer<typeof TODOResponseSchema> = {
@@ -89,6 +93,9 @@ export const fillTODOLocation = genkitAI.defineFlow(
 
       return response;
     } catch (error) {
+      if (error instanceof TaskRetryError) {
+        throw error;
+      }
       return errorResponse(error);
     }
   }
