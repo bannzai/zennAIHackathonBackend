@@ -17,5 +17,12 @@ export const enqueueTODOPrepare =
 export const executeTODOPrepare =
   require("./functions/todoPrepare/execute_task").executeTODOPrepare;
 
-export const fillLocation =
-  require("./functions/fillLocation/enqueue_task").fillLocation;
+export const enqueueFillLocation =
+  require("./functions/fillLocation/enqueue_task").enqueueFillLocation;
+export const executeFillLocation =
+  require("./functions/fillLocation/execute_task").executeFillLocation;
+
+export const enqueueFillTODOLocation =
+  require("./functions/fillTODOLocation/enqueue_task").enqueueFillTODOLocation;
+export const executeFillTODOLocation =
+  require("./functions/fillTODOLocation/execute_task").executeFillTODOLocation;
