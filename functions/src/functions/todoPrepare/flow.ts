@@ -164,8 +164,7 @@ const todoTimeRequired = genkitAI.defineTool(
     const { taskTopic, content, supplement } = input;
     const todoPrompt = `- ${content}: ${supplement ?? ""}`;
     const prompt = `
-    タスク: 「${taskTopic}」を終了したいです。
-    下記の手順が存在します。それぞれのタスクに対しての所要時間を教えてください。単位は秒です。
+    タスク: 「${taskTopic}」があります。関連した小タスクに下記があります。所要時間を教えてください。単位は「秒」です
     ${todoPrompt}
     `;
     const response = await genkitAI.generate({
@@ -198,17 +197,14 @@ const todoTimeRequired = genkitAI.defineTool(
     const jsonResponse = await genkitAI.generate({
       prompt,
       output: {
-        schema: z.array(
-          z.object({
-            taskName: z.string().describe("タスク名"),
-            seconds: z.number().describe("所要時間(秒)"),
-          })
-        ),
+        schema: z.object({
+          seconds: z.number().describe("所要時間(秒)"),
+        }),
       },
     });
     const json = jsonResponse.output ?? null;
     if (json) {
-      const timeRequired = json.reduce((acc, curr) => acc + curr.seconds, 0);
+      const timeRequired = json.seconds;
       return { timeRequired, aiTextResponse, groundings };
     }
     return { timeRequired: null, aiTextResponse, groundings };
