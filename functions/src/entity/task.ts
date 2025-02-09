@@ -28,7 +28,8 @@ export const TaskPreparedSchema = z
     definitionGroundings: z.array(GroundingDataSchema),
     completed: z.boolean(),
     // タスクの代表的な場所
-    locations: z.array(LocationSchema),
+    // 未処理の場合はnull。処理完了の場合は空配列の可能性がある
+    locations: z.union([z.null(), z.array(LocationSchema)]),
 
     preparedDateTime: FirestoreTimestampSchema,
   })
