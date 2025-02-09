@@ -94,20 +94,14 @@ const todoLocation = genkitAI.defineTool(
 );
 
 // このflowはCloud Taskから使用されるのでエラーハンドリングは慎重に
-export const fillLocation = onFlow(
-  genkitAI,
+export const fillTODOLocation = genkitAI.defineFlow(
   {
-    name: "fillLocation",
+    name: "fillTODOLocation",
     inputSchema: FillLocationSchema,
     outputSchema: ResponseSchema,
-    httpsOptions: {
-      timeoutSeconds: 60 * 10,
-      memory: "1GiB",
-    },
-    authPolicy: appAuthPolicy("fillLocation"),
   },
   async (input) => {
-    console.log(`#fillLocation: ${JSON.stringify({ input }, null, 2)}`);
+    console.log(`#fillTODOLocation: ${JSON.stringify({ input }, null, 2)}`);
     try {
       const {
         taskID,
@@ -189,6 +183,38 @@ export const fillLocation = onFlow(
       };
 
       return response;
+    } catch (error) {
+      return errorResponse(error);
+    }
+  }
+);
+
+export const fillTaskLocation = genkitAI.defineFlow(
+  {
+    name: "fillTaskLocation",
+    inputSchema: FillLocationSchema,
+    outputSchema: ResponseSchema,
+  },
+  async (input) => {
+    console.log(`#fillTaskLocation: ${JSON.stringify({ input }, null, 2)}`);
+
+    try {
+      const {
+        taskID,
+        userLocation,
+        userRequest: { userID },
+      } = input;
+
+      const taskDocRef = database
+        .collection(`/users/${userID}/tasks`)
+        .doc(taskID);
+      const taskSnapshot = await taskDocRef.get();
+      const task = taskSnapshot.data();
+      if (!zodTypeGuard(TaskPreparedSchema, task)) {
+        return errorResponse(
+          new Error(`task loading parse error. taskLoading: ${task}`)
+        );
+      }
     } catch (error) {
       return errorResponse(error);
     }
