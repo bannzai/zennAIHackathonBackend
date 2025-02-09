@@ -8,7 +8,7 @@ import { fillTODOLocation } from "../fillTODOLocation/flow";
 export const executeFillTODOLocation = onTaskDispatched(
   {
     retryConfig: {
-      maxAttempts: 3,
+      maxAttempts: 20,
       minBackoffSeconds: 60,
     },
     rateLimits: {
