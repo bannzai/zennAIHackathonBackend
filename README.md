@@ -18,8 +18,11 @@ https://github.com/bannzai/zenn_ai_hackathon
 See [.env.sample](./functions/.env.sample)
 
 ```
+# localhostで起動する場合は local を設定。あとはdev,prodどちらでも良い
 APP_ENV=dev
+# 多分ここから取得。https://aistudio.google.com/app/apikey?hl=ja
 GOOGLE_GENAI_API_KEY=
+# この命名のサービスアカウントがいるのでそれを使います。何必要かは忘れました(Cloud TasksのURLを取得だったかな)
 GOOGLE_APPLICATION_CREDENTIALS_SERVICE_ACCOUNT_ID=PROJECT_ID@appspot.gserviceaccount.com
 ```
 
