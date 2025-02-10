@@ -1,5 +1,5 @@
 
-# Client
+# モバイルアプリのリポジトリ
 https://github.com/bannzai/zenn_ai_hackathon
 
 ## Env
