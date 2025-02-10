@@ -20,7 +20,7 @@ export const genkitAI = genkit({
 
 export const googleGenerativeAI = new GoogleGenerativeAI(
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  process.env.GEMINI_API_KEY!
+  process.env.GOOGLE_GENAI_API_KEY!
 );
 
 // Unable to submit request because Please use google_search field instead of google_search_retrieval field.. Learn more: https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/gemini
