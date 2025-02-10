@@ -1,6 +1,6 @@
 
 # Client
-https://github.com/bannzai/zenn_ai_hackathon/settings
+https://github.com/bannzai/zenn_ai_hackathon
 
 ## Env
 See [.env.sample](./functions/.env.sample)
